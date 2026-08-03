@@ -16,7 +16,7 @@
            全部可通过 URL 参数覆盖,支持以下设计维度:
            1. 配色:primary/secondary/accent/text/bg/body/label/status/keyBg/keyText/keyBorder/success
            2. 像素与组件尺寸:size/pad/gap/btnH/keyH/font
-            3. 菜单布局:menuPos(三横杆菜单固定于品牌logo下方)
+            3. 菜单:menuSize(三横杆菜单固定于品牌logo正下方,仅可调大小)
            4. 前后景色:见配色
            5. 选中效果:active
            6. 退出机制:exitBtn
@@ -49,6 +49,7 @@
             --pos-amount-font: 96px;   /* 金额字号 */
             --pos-symbol-font: 56px;   /* ¥符号字号 */
             --pos-label-font: 22px;    /* "请输入金额"提示文字字号 */
+            --pos-menu-size: 28px;     /* 顶部三横杆菜单图标大小 */
 
             /* 弧度 */
             --pos-radius: 16px;
@@ -401,9 +402,9 @@
             display: flex;
         }
 
-        /* 汉堡菜单(菜单布局,置于品牌logo下方) */
+        /* 汉堡菜单(固定在品牌logo正下方,左侧;大小可调) */
         .menu-icon {
-            width: 28px;
+            width: var(--pos-menu-size);
             margin-bottom: 4px;
             display: flex;
             flex-direction: column;
@@ -417,14 +418,7 @@
             box-shadow: 0 0 6px var(--pos-primary-line);
         }
 
-        /* 菜单位置 */
-        .pos-container[data-menu="center"] .menu-icon {
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .pos-container[data-menu="right"] .menu-icon {
-            margin-left: auto;
-        }
+        /* 菜单位置:固定在品牌logo正下方(左侧),不可移动 */
 
         /* 菜单样式:固定为三横杆(置于品牌logo下方),不再有圆点/宫格变体 */
 
@@ -1144,7 +1138,7 @@
 
         // 当前设计配置(用于 Token 展示条)
         const designConfig = {
-            menuPos: 'left',
+            menuPos: 'left(固定)',
             amountPos: 'center',
             btns: 'row',
             page: 'amount',
@@ -1581,10 +1575,11 @@
             }
 
             // 3. 菜单布局
-            const menuPos = params.get('menuPos') || params.get('iconPos');
-            if (menuPos && ['left', 'center', 'right'].includes(menuPos)) {
-                designConfig.menuPos = menuPos;
-                posContainer.setAttribute('data-menu', menuPos);
+            // 3. 菜单(固定在logo下方,仅可调大小)
+            const menuSize = params.get('menuSize');
+            if (menuSize && /^\d{1,3}$/.test(menuSize)) {
+                const ms = parseInt(menuSize, 10);
+                if (ms >= 16 && ms <= 80) root.style.setProperty('--pos-menu-size', ms + 'px');
             }
             const amountPos = params.get('amountPos') || params.get('iconPos');
             if (amountPos && ['left', 'center', 'right'].includes(amountPos)) {
@@ -1690,7 +1685,7 @@
             const pageLabels = { amount: '输入金额', menu: '主菜单', order: '交易记录', success: '收款成功', settings: '设置' };
             tokensBar.innerHTML = chips +
                 `<span class="token-chip"><b>尺寸</b>${cs.width || 'auto'}</span>` +
-                `<span class="token-chip"><b>菜单</b>${designConfig.menuPos}</span>` +
+                `<span class="token-chip"><b>菜单</b>${root.style.getPropertyValue('--pos-menu-size') || '28px'}</span>` +
                 `<span class="token-chip"><b>图标</b>${designConfig.iconStyle}</span>` +
                 `<span class="token-chip"><b>按钮</b>${designConfig.btns === 'stack' ? '竖排' : '并排'}</span>` +
                 `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
