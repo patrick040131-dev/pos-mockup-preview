@@ -76,6 +76,11 @@
             --pos-row-bg: rgba(255,255,255,0.06);
             --pos-row-border: rgba(255,255,255,0.15);
             --pos-key-sub: #a1a09e;
+
+            /* 品牌色(固定,不随主题方案变化,可用 brand=HEX 覆盖) */
+            --pos-brand: #4285f4;
+            --pos-brand-to: #3060b0;
+            --pos-brand-faint: rgba(66,133,244,0.30);
         }
 
         body {
@@ -236,62 +241,28 @@
         .logo-box {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-primary-to) 100%);
+            background: linear-gradient(135deg, var(--pos-brand) 0%, var(--pos-brand-to) 100%);
             border-radius: var(--pos-radius);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 2px 8px var(--pos-primary-faint);
+            box-shadow: 0 2px 8px var(--pos-brand-faint);
         }
 
-        /* Logo内的"L"形状 */
+        /* Logo内的"L"形状(SVG,细化版) */
         .logo-l {
-            position: relative;
-            width: 18px;
-            height: 22px;
-        }
-
-        .logo-l::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 4px;
-            height: 22px;
-            background: white;
-            border-radius: 2px;
-        }
-
-        .logo-l::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 18px;
-            height: 4px;
-            background: white;
-            border-radius: 2px;
-        }
-
-        /* Logo装饰线条 */
-        .logo-accent {
-            position: absolute;
-            top: 4px;
-            right: 4px;
-            width: 10px;
-            height: 10px;
-            border-top: 2px solid rgba(255, 255, 255, 0.4);
-            border-right: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 0 4px 0 0;
+            width: 19px;
+            height: 21px;
+            display: block;
         }
 
         .brand-name {
-            color: var(--pos-primary);
+            color: var(--pos-brand);
             font-size: 28px;
             font-weight: bold;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px var(--pos-primary-faint);
+            text-shadow: 0 0 10px var(--pos-brand-faint);
         }
 
         .status-icons {
@@ -1065,8 +1036,10 @@
                 <div class="status-bar">
                     <div class="brand-area">
                         <div class="logo-box">
-                            <div class="logo-l"></div>
-                            <div class="logo-accent"></div>
+                            <svg class="logo-l" viewBox="0 0 20 22" width="19" height="21" aria-hidden="true">
+                                <path d="M3.5 2v14h13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M15.5 2v4" fill="none" stroke="#fff" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
                         </div>
                         <div class="brand-name" id="brandName">拉卡拉</div>
                     </div>
@@ -1525,6 +1498,9 @@
             const G = hexToRgb(pal.success);
             const KT = hexToRgb(pal.keyText);
             const KB = hexToRgb(pal.keyBg);
+            const B = hexToRgb(pal.brand);
+            root.style.setProperty('--pos-brand-to', toHex(darken(B, 0.72)));
+            root.style.setProperty('--pos-brand-faint', rgbaStr(B, 0.30));
             root.style.setProperty('--pos-primary-to', toHex(darken(P, 0.72)));
             root.style.setProperty('--pos-primary-faint', rgbaStr(P, 0.30));
             root.style.setProperty('--pos-primary-line', rgbaStr(P, 0.40));
@@ -1549,15 +1525,15 @@
                 primary: '#4285f4', secondary: '#e68232', accent: '#ffc800',
                 text: '#ffffff', bg: '#121419', body: '#eeede9', label: '#4285f4',
                 status: '#828791', keyBg: '#f7f6f3', keyText: '#373737',
-                keyBorder: '#ceccc6', success: '#3fa876'
+                keyBorder: '#ceccc6', success: '#3fa876', brand: '#4285f4'
             };
 
             function setColor(name, prop) {
                 const v = params.get(name);
                 if (v && /^[0-9a-fA-F]{6}$/.test(v)) {
                     palette[name] = '#' + v.toLowerCase();
-                    root.style.setProperty(prop, palette[name]);
                 }
+                root.style.setProperty(prop, palette[name]);
             }
 
             // 1. 配色
@@ -1573,6 +1549,7 @@
             setColor('keyText', '--pos-key-text');
             setColor('keyBorder', '--pos-key-border');
             setColor('success', '--pos-success');
+            setColor('brand', '--pos-brand');
             computeShades(palette);
 
             // 品牌名
