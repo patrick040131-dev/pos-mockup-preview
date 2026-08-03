@@ -48,6 +48,7 @@
             --pos-key-h: 110px;        /* 实体按键最小高度 */
             --pos-amount-font: 96px;   /* 金额字号 */
             --pos-symbol-font: 56px;   /* ¥符号字号 */
+            --pos-label-font: 22px;    /* "请输入金额"提示文字字号 */
 
             /* 弧度 */
             --pos-radius: 16px;
@@ -228,7 +229,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .brand-area {
@@ -403,7 +404,7 @@
         /* 汉堡菜单(菜单布局,置于品牌logo下方) */
         .menu-icon {
             width: 28px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             display: flex;
             flex-direction: column;
         }
@@ -430,7 +431,7 @@
         /* 金额显示区(前后景色 / 像素定位) */
         .amount-area {
             text-align: center;
-            margin: 26px 0 34px;
+            margin: 10px 0 30px;
         }
 
         .pos-container[data-amount="left"] .amount-area { text-align: left; }
@@ -440,7 +441,7 @@
 
         .input-label {
             color: var(--pos-label);
-            font-size: 22px;
+            font-size: var(--pos-label-font);
             margin-bottom: 15px;
             text-shadow: 0 0 8px var(--pos-label-faint);
         }
@@ -1133,6 +1134,7 @@
         let currentAmount = '';
         let shownAmount = '0.00';
         let currentPage = 'amount';
+        let amountLabel = '请输入金额';
 
         const scaleSlider = document.getElementById('scaleSlider');
         const scaleValue = document.getElementById('scaleValue');
@@ -1178,7 +1180,7 @@
             return `
                 <div class="menu-icon"><div></div><div></div><div></div></div>
                 <div class="amount-area">
-                    <div class="input-label">请输入金额</div>
+                    <div class="input-label">${amountLabel}</div>
                     <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
                 </div>
                 <div class="action-buttons">
@@ -1449,6 +1451,11 @@
             root.style.setProperty('--pos-symbol-font', Math.round(56 * f / 100) + 'px');
         }
 
+        function applyLabelFont(v) {
+            const px = parseInt(v, 10);
+            if (px >= 12 && px <= 60) root.style.setProperty('--pos-label-font', px + 'px');
+        }
+
         function hexToRgb(hex) {
             hex = hex.replace('#', '');
             return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
@@ -1566,6 +1573,12 @@
             if (keyH && /^\d{2,3}$/.test(keyH)) root.style.setProperty('--pos-key-h', parseInt(keyH, 10) + 'px');
             const font = params.get('font');
             if (font && /^\d{2,3}$/.test(font)) applyFont(font);
+            const labelSize = params.get('labelSize');
+            if (labelSize && /^\d{2}$/.test(labelSize)) applyLabelFont(labelSize);
+            const label = params.get('label');
+            if (label !== null) {
+                try { amountLabel = decodeURIComponent(label); } catch (e) { amountLabel = label; }
+            }
 
             // 3. 菜单布局
             const menuPos = params.get('menuPos') || params.get('iconPos');
@@ -1682,6 +1695,7 @@
                 `<span class="token-chip"><b>按钮</b>${designConfig.btns === 'stack' ? '竖排' : '并排'}</span>` +
                 `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
                 `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
+                `<span class="token-chip"><b>提示语</b>${amountLabel}</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
                 `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
         }
