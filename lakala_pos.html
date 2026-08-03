@@ -3,14 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>拉卡拉POS机模拟器</title>
+    <title>拉卡拉POS机模拟器 - 界面设计系统</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
+        /* ============================================================
+           设计变量(默认值 = 拉卡拉经典设计)
+           全部可通过 URL 参数覆盖,支持以下设计维度:
+           1. 配色:primary/secondary/accent/text/bg/body/label/status/keyBg/keyText/keyBorder/success
+           2. 像素与组件尺寸:size/pad/gap/btnH/keyH/font
+           3. 菜单布局:menuPos/menuStyle
+           4. 前后景色:见配色
+           5. 选中效果:active
+           6. 退出机制:exitBtn
+           7. 动态页面:page
+           8. 应景icon:iconStyle
+           9. 组件弧度:radius
+           10. 弹窗:dialogW/dialogOpacity/popup
+           ============================================================ */
+        :root {
+            /* 配色 */
+            --pos-primary: #4285f4;
+            --pos-secondary: #e68232;
+            --pos-accent: #ffc800;
+            --pos-text: #ffffff;
+            --pos-bg: #121419;
+            --pos-body: #eeede9;
+            --pos-label: #4285f4;
+            --pos-status: #828791;
+            --pos-key-bg: #f7f6f3;
+            --pos-key-text: #373737;
+            --pos-key-border: #ceccc6;
+            --pos-success: #3fa876;
+
+            /* 像素与组件尺寸 */
+            --pos-width: 600px;        /* 机身宽度(屏幕大小) */
+            --pos-pad: 28px;           /* 屏幕内边距 */
+            --pos-gap: 16px;           /* 元素间距 */
+            --pos-btn-h: 84px;         /* 功能按钮高度 */
+            --pos-key-h: 110px;        /* 实体按键最小高度 */
+            --pos-amount-font: 96px;   /* 金额字号 */
+            --pos-symbol-font: 56px;   /* ¥符号字号 */
+
+            /* 弧度 */
+            --pos-radius: 16px;
+            --pos-radius-screen: 32px;
+            --pos-radius-key: 14px;
+            --pos-radius-icon: 10px;
+            --pos-radius-btn: 42px;
+
+            /* 弹窗 */
+            --pos-dialog-w: 360px;
+            --pos-dialog-opacity: 0.85;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
             background: #0a0a0a;
@@ -22,7 +72,7 @@
             padding: 20px;
             gap: 20px;
         }
-        
+
         /* 缩放控制条 */
         .scale-control {
             background: rgba(255, 255, 255, 0.05);
@@ -35,12 +85,12 @@
             gap: 15px;
             color: #ffffff;
         }
-        
+
         .scale-label {
             font-size: 14px;
             color: #aaa;
         }
-        
+
         .scale-slider {
             width: 200px;
             height: 6px;
@@ -49,48 +99,89 @@
             outline: none;
             -webkit-appearance: none;
         }
-        
+
         .scale-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             width: 18px;
             height: 18px;
-            background: #4285f4;
+            background: var(--pos-primary);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.5);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 50%, transparent);
         }
-        
+
         .scale-slider::-moz-range-thumb {
             width: 18px;
             height: 18px;
-            background: #4285f4;
+            background: var(--pos-primary);
             border-radius: 50%;
             cursor: pointer;
             border: none;
         }
-        
+
         .scale-value {
             font-size: 16px;
             font-weight: bold;
-            color: #4285f4;
+            color: var(--pos-primary);
             min-width: 50px;
             text-align: right;
         }
-        
+
+        /* 已应用的设计 Token 展示条 */
+        .tokens-bar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            color: #ddd;
+            font-size: 12px;
+            max-width: 960px;
+        }
+
+        .token-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .token-chip i {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            display: inline-block;
+        }
+
+        .token-chip b {
+            color: #fff;
+            font-weight: 600;
+        }
+
         /* POS容器包装 */
         .pos-wrapper {
             transition: transform 0.3s ease;
             transform-origin: center center;
         }
-        
+
         .pos-container {
-            background: #eeede9;
-            border-radius: 40px;
+            background: var(--pos-body);
+            border-radius: var(--pos-radius-screen);
             padding: 30px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            width: 600px;
+            width: var(--pos-width);
         }
-        
+
+        /* 屏幕大小预设(像素定位) */
+        .pos-container[data-size="small"]  { --pos-width: 500px; }
+        .pos-container[data-size="medium"] { --pos-width: 620px; }
+        .pos-container[data-size="large"]  { --pos-width: 740px; }
+
         /* 摄像头 */
         .camera {
             width: 16px;
@@ -99,17 +190,17 @@
             border-radius: 50%;
             margin: 0 auto 20px;
         }
-        
+
         /* 屏幕区域 */
         .screen {
-            background: #121419;
-            border-radius: 30px;
-            padding: 28px;
+            background: var(--pos-bg);
+            border-radius: var(--pos-radius-screen);
+            padding: var(--pos-pad);
             margin-bottom: 30px;
             min-height: 420px;
             position: relative;
         }
-        
+
         /* 状态栏 */
         .status-bar {
             display: flex;
@@ -117,33 +208,33 @@
             align-items: center;
             margin-bottom: 20px;
         }
-        
+
         .brand-area {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        
-        /* 拉卡拉Logo - 精细版 */
+
+        /* Logo */
         .logo-box {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-            border-radius: 8px;
+            background: linear-gradient(135deg, var(--pos-primary) 0%, color-mix(in srgb, var(--pos-primary) 72%, black) 100%);
+            border-radius: var(--pos-radius);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
         }
-        
+
         /* Logo内的"L"形状 */
         .logo-l {
             position: relative;
             width: 18px;
             height: 22px;
         }
-        
+
         .logo-l::before {
             content: '';
             position: absolute;
@@ -154,7 +245,7 @@
             background: white;
             border-radius: 2px;
         }
-        
+
         .logo-l::after {
             content: '';
             position: absolute;
@@ -165,7 +256,7 @@
             background: white;
             border-radius: 2px;
         }
-        
+
         /* Logo装饰线条 */
         .logo-accent {
             position: absolute;
@@ -177,23 +268,23 @@
             border-right: 2px solid rgba(255, 255, 255, 0.4);
             border-radius: 0 4px 0 0;
         }
-        
+
         .brand-name {
-            color: #4285f4;
+            color: var(--pos-primary);
             font-size: 28px;
             font-weight: bold;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px rgba(66, 133, 244, 0.3);
+            text-shadow: 0 0 10px color-mix(in srgb, var(--pos-primary) 30%, transparent);
         }
-        
+
         .status-icons {
             display: flex;
             align-items: center;
             gap: 12px;
-            color: #828791;
+            color: var(--pos-status);
             font-size: 16px;
         }
-        
+
         /* WiFi图标 */
         .wifi-icon {
             width: 20px;
@@ -201,15 +292,15 @@
             position: relative;
             display: inline-block;
         }
-        
+
         .wifi-icon::before,
         .wifi-icon::after {
             content: '';
             position: absolute;
-            border: 2px solid #828791;
+            border: 2px solid var(--pos-status);
             border-radius: 50%;
         }
-        
+
         .wifi-icon::before {
             width: 18px;
             height: 18px;
@@ -219,7 +310,7 @@
             bottom: 0;
             left: 1px;
         }
-        
+
         .wifi-icon::after {
             width: 12px;
             height: 12px;
@@ -229,18 +320,18 @@
             bottom: 0;
             left: 4px;
         }
-        
+
         .wifi-dot {
             position: absolute;
             width: 3px;
             height: 3px;
-            background: #828791;
+            background: var(--pos-status);
             border-radius: 50%;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
         }
-        
+
         /* 信号强度 */
         .signal-bars {
             display: flex;
@@ -248,119 +339,181 @@
             gap: 2px;
             height: 16px;
         }
-        
+
         .signal-bar {
             width: 4px;
-            background: #828791;
+            background: var(--pos-status);
             border-radius: 1px;
         }
-        
+
         .signal-bar:nth-child(1) { height: 4px; }
         .signal-bar:nth-child(2) { height: 7px; }
         .signal-bar:nth-child(3) { height: 10px; }
         .signal-bar:nth-child(4) { height: 13px; }
         .signal-bar:nth-child(5) { height: 16px; }
-        
+
         /* 电池 */
         .battery-icon {
             display: inline-flex;
             align-items: center;
             gap: 2px;
         }
-        
+
         .battery-body {
             width: 24px;
             height: 12px;
-            border: 2px solid #828791;
+            border: 2px solid var(--pos-status);
             border-radius: 3px;
             padding: 2px;
             display: flex;
             align-items: center;
             position: relative;
         }
-        
+
         .battery-level {
             height: 100%;
-            background: #828791;
+            background: var(--pos-status);
             border-radius: 1px;
             width: 100%;
         }
-        
+
         .battery-tip {
             width: 2px;
             height: 6px;
-            background: #828791;
+            background: var(--pos-status);
             border-radius: 0 2px 2px 0;
         }
-        
+
         .battery-percent {
             font-size: 12px;
-            color: #828791;
+            color: var(--pos-status);
             margin-left: 4px;
         }
-        
-        /* 汉堡菜单 */
+
+        /* 退出按钮(退出机制设计) */
+        .exit-btn {
+            display: none;
+            width: 26px;
+            height: 26px;
+            border-radius: var(--pos-radius);
+            align-items: center;
+            justify-content: center;
+            color: var(--pos-primary);
+            border: 1px solid color-mix(in srgb, var(--pos-primary) 40%, transparent);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .exit-btn:hover {
+            background: color-mix(in srgb, var(--pos-primary) 15%, transparent);
+        }
+        .pos-container[data-exit="true"] .exit-btn {
+            display: flex;
+        }
+
+        /* 汉堡菜单(菜单布局) */
         .menu-icon {
             width: 28px;
             margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
         }
-        
+
         .menu-icon div {
             height: 3px;
-            background: #4285f4;
+            background: var(--pos-primary);
             margin: 7px 0;
             border-radius: 2px;
-            box-shadow: 0 0 6px rgba(66, 133, 244, 0.4);
+            box-shadow: 0 0 6px color-mix(in srgb, var(--pos-primary) 40%, transparent);
         }
-        
-        /* 金额显示区 */
+
+        /* 菜单位置 */
+        .pos-container[data-menu="center"] .menu-icon {
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .pos-container[data-menu="right"] .menu-icon {
+            margin-left: auto;
+        }
+
+        /* 菜单样式:线条 / 圆点 / 宫格 */
+        .pos-container[data-menustyle="dots"] .menu-icon {
+            align-items: center;
+        }
+        .pos-container[data-menustyle="dots"] .menu-icon div {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            margin: 6px 0;
+        }
+        .pos-container[data-menustyle="grid"] .menu-icon {
+            width: 44px;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+        .pos-container[data-menustyle="grid"] .menu-icon div {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin: 3px;
+        }
+
+        /* 金额显示区(前后景色 / 像素定位) */
         .amount-area {
             text-align: center;
             margin: 50px 0 40px;
         }
-        
+
+        .pos-container[data-amount="left"] .amount-area { text-align: left; }
+        .pos-container[data-amount="left"] .amount-display { justify-content: flex-start; }
+        .pos-container[data-amount="right"] .amount-area { text-align: right; }
+        .pos-container[data-amount="right"] .amount-display { justify-content: flex-end; }
+
         .input-label {
-            color: #4285f4;
+            color: var(--pos-label);
             font-size: 22px;
             margin-bottom: 15px;
-            text-shadow: 0 0 8px rgba(66, 133, 244, 0.3);
+            text-shadow: 0 0 8px color-mix(in srgb, var(--pos-label) 30%, transparent);
         }
-        
+
         .amount-display {
             display: flex;
             justify-content: center;
             align-items: baseline;
             gap: 5px;
         }
-        
+
         .currency-symbol {
-            color: #ffc800;
-            font-size: 56px;
+            color: var(--pos-accent);
+            font-size: var(--pos-symbol-font);
             font-weight: bold;
-            text-shadow: 0 0 15px rgba(255, 200, 0, 0.4);
+            text-shadow: 0 0 15px color-mix(in srgb, var(--pos-accent) 40%, transparent);
         }
-        
+
         .amount-value {
-            color: #ffffff;
-            font-size: 96px;
+            color: var(--pos-text);
+            font-size: var(--pos-amount-font);
             font-weight: bold;
             line-height: 1;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 20px color-mix(in srgb, var(--pos-text) 20%, transparent);
         }
-        
-        /* 功能按钮 */
+
+        /* 功能按钮(组件尺寸 / 弧度 / 应景icon) */
         .action-buttons {
             display: flex;
-            gap: 18px;
+            gap: var(--pos-gap);
             margin-bottom: 25px;
         }
-        
+
         .action-btn {
             flex: 1;
             background: #232830;
             border: 2px solid #3c4655;
-            border-radius: 44px;
+            border-radius: var(--pos-radius-btn);
             padding: 18px 24px;
+            min-height: var(--pos-btn-h);
             display: flex;
             align-items: center;
             gap: 14px;
@@ -368,21 +521,21 @@
             transition: all 0.2s;
             white-space: nowrap;
         }
-        
+
         .action-btn:hover {
             background: #2d3542;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         }
-        
+
         .action-btn:active {
             transform: translateY(0);
         }
-        
+
         .btn-icon {
             width: 42px;
             height: 42px;
-            border-radius: 10px;
+            border-radius: var(--pos-radius-icon);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -391,45 +544,228 @@
             color: white;
             flex-shrink: 0;
         }
-        
+
         .btn-icon.orange {
-            background: linear-gradient(135deg, #e68232 0%, #d4701f 100%);
-            box-shadow: 0 2px 8px rgba(230, 130, 50, 0.3);
+            background: linear-gradient(135deg, var(--pos-secondary) 0%, color-mix(in srgb, var(--pos-secondary) 78%, black) 100%);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-secondary) 30%, transparent);
         }
-        
+
         .btn-icon.blue {
-            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+            background: linear-gradient(135deg, var(--pos-primary) 0%, color-mix(in srgb, var(--pos-primary) 72%, black) 100%);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
         }
-        
+
         .btn-text {
             color: #dcdce1;
             font-size: 26px;
             font-weight: 500;
         }
-        
-        /* 分页指示器 */
+
+        /* 应景icon 样式 */
+        .pos-container[data-iconstyle="round"] .btn-icon {
+            border-radius: 50%;
+        }
+        .pos-container[data-iconstyle="square"] .btn-icon {
+            border-radius: 6px;
+        }
+        .pos-container[data-iconstyle="line"] .btn-icon {
+            background: transparent !important;
+            box-shadow: none;
+            border: 2px solid var(--pos-primary);
+            color: var(--pos-primary);
+        }
+        .pos-container[data-iconstyle="line"] .btn-icon.orange {
+            border-color: var(--pos-secondary);
+            color: var(--pos-secondary);
+        }
+
+        /* 分页指示器(选中效果) */
         .page-dots {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin-bottom: 15px;
         }
-        
+
         .dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
             background: #3c414b;
         }
-        
+
         .dot.active {
             width: 20px;
             border-radius: 5px;
-            background: #4285f4;
-            box-shadow: 0 0 8px rgba(66, 133, 244, 0.5);
+            background: var(--pos-primary);
+            box-shadow: 0 0 8px color-mix(in srgb, var(--pos-primary) 50%, transparent);
         }
-        
+
+        /* 选中效果样式 */
+        .pos-container[data-active="outline"] .dot.active {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--pos-primary);
+            box-shadow: none;
+        }
+        .pos-container[data-active="glow"] .dot.active {
+            box-shadow: 0 0 14px color-mix(in srgb, var(--pos-primary) 80%, transparent),
+                        0 0 4px color-mix(in srgb, var(--pos-primary) 60%, transparent);
+        }
+        .pos-container[data-active="underline"] .dot.active {
+            width: 20px;
+            height: 5px;
+            border-radius: 3px;
+            background: var(--pos-primary);
+            box-shadow: none;
+        }
+
+        /* ============================================================
+           动态页面(URL 参数 page 切换)
+           ============================================================ */
+        .page-title {
+            font-size: 22px;
+            color: var(--pos-primary);
+            margin: 14px 0 18px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin: 24px 0;
+        }
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .menu-item-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--pos-radius-icon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: bold;
+            color: #fff;
+            background: var(--pos-primary);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
+        }
+        .menu-item.secondary .menu-item-icon {
+            background: var(--pos-secondary);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-secondary) 30%, transparent);
+        }
+        .menu-item span {
+            color: var(--pos-text);
+            font-size: 16px;
+        }
+
+        .order-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .order-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: color-mix(in srgb, var(--pos-text) 6%, transparent);
+            border: 1px solid color-mix(in srgb, var(--pos-text) 15%, transparent);
+            border-radius: var(--pos-radius-key);
+            padding: 14px 16px;
+        }
+        .order-name {
+            color: var(--pos-text);
+            font-size: 18px;
+        }
+        .order-amt {
+            color: var(--pos-accent);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .success-wrap {
+            text-align: center;
+            padding: 24px 0 10px;
+        }
+        .success-icon {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            background: var(--pos-success);
+            color: #fff;
+            font-size: 44px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 18px;
+            box-shadow: 0 4px 18px color-mix(in srgb, var(--pos-success) 50%, transparent);
+        }
+        .success-title {
+            color: var(--pos-text);
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 18px;
+        }
+        .success-sub {
+            color: var(--pos-status);
+            font-size: 16px;
+            margin-top: 14px;
+        }
+
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid color-mix(in srgb, var(--pos-text) 15%, transparent);
+        }
+        .setting-row span {
+            color: var(--pos-text);
+            font-size: 18px;
+        }
+        .setting-val {
+            color: var(--pos-status);
+        }
+        .setting-val.red {
+            color: #e04646;
+        }
+        .toggle {
+            width: 46px;
+            height: 26px;
+            border-radius: 13px;
+            background: #3c414b;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .toggle.on {
+            background: var(--pos-primary);
+        }
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            transition: left 0.2s;
+        }
+        .toggle.on::after {
+            left: 23px;
+        }
+
         /* M7水印 */
         .watermark {
             position: absolute;
@@ -440,81 +776,81 @@
             font-weight: 500;
             opacity: 0.6;
         }
-        
+
         /* 实体按键区 */
         .keypad {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
+            gap: var(--pos-gap);
         }
-        
+
         .key {
-            background: #f7f6f3;
-            border: 2px solid #ceccc6;
-            border-radius: 16px;
+            background: var(--pos-key-bg);
+            border: 2px solid var(--pos-key-border);
+            border-radius: var(--pos-radius-key);
             padding: 28px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.15s;
             position: relative;
-            min-height: 110px;
+            min-height: var(--pos-key-h);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
-        
+
         .key:hover {
-            background: #ffffff;
+            filter: brightness(1.05);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        
+
         .key:active {
             transform: translateY(0);
-            background: #f0efec;
+            filter: brightness(0.96);
         }
-        
+
         .key-main {
             font-size: 58px;
             font-weight: bold;
-            color: #373737;
+            color: var(--pos-key-text);
             line-height: 1;
         }
-        
+
         .key-sub {
             font-size: 18px;
-            color: #969488;
+            color: color-mix(in srgb, var(--pos-key-text) 55%, var(--pos-key-bg));
             position: absolute;
             bottom: 14px;
             right: 14px;
         }
-        
+
         .key-label {
             font-size: 22px;
             font-weight: bold;
-            color: #373737;
+            color: var(--pos-key-text);
             margin-bottom: 8px;
         }
-        
+
         .key-underline {
             width: 70%;
             height: 5px;
             border-radius: 3px;
         }
-        
+
         .key-underline.red {
             background: #e04646;
         }
-        
+
         .key-underline.amber {
             background: #e0b237;
         }
-        
+
         .key-underline.green {
-            background: #3fa876;
+            background: var(--pos-success);
         }
-        
+
         /* 箭头图标 */
         .arrow-up, .arrow-down {
             width: 0;
@@ -522,71 +858,168 @@
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
         }
-        
+
         .arrow-up {
-            border-bottom: 26px solid #373737;
+            border-bottom: 26px solid var(--pos-key-text);
         }
-        
+
         .arrow-down {
-            border-top: 26px solid #373737;
+            border-top: 26px solid var(--pos-key-text);
         }
-        
+
         /* 电源图标 */
         .power-icon {
             width: 44px;
             height: 44px;
-            border: 5px solid #373737;
+            border: 5px solid var(--pos-key-text);
             border-radius: 50%;
             border-top-color: transparent;
             position: relative;
         }
-        
+
         .power-icon::before {
             content: '';
             position: absolute;
             width: 5px;
             height: 20px;
-            background: #373737;
+            background: var(--pos-key-text);
             top: -26px;
             left: 50%;
             transform: translateX(-50%);
             border-radius: 3px;
         }
-        
-        /* 按键点击反馈 */
+
+        /* 按键点击反馈(选中/按压效果) */
         @keyframes keypress {
             0% { transform: scale(1); }
             50% { transform: scale(0.95); }
             100% { transform: scale(1); }
         }
-        
+
+        @keyframes keypressRipple {
+            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pos-primary) 35%, transparent); }
+            100% { box-shadow: 0 0 0 20px transparent; }
+        }
+
         .key.pressed {
             animation: keypress 0.2s;
         }
-        
+
+        .pos-container[data-press="none"] .key.pressed {
+            animation: none;
+        }
+        .pos-container[data-press="ripple"] .key.pressed {
+            animation: keypressRipple 0.35s;
+        }
+
+        /* ============================================================
+           弹窗 / 消息(尺寸、不透明度、弹出方式)
+           ============================================================ */
+        .pos-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            border-radius: var(--pos-radius-screen);
+            padding: 26px 22px;
+            text-align: center;
+            z-index: 2000;
+            backdrop-filter: blur(6px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+        .dlg-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .dlg-msg {
+            font-size: 15px;
+            opacity: 0.85;
+            line-height: 1.5;
+        }
+        .dlg-btns {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .dlg-btn {
+            flex: 1;
+            padding: 12px 0;
+            border: none;
+            border-radius: var(--pos-radius-key);
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .dlg-btn.primary {
+            background: var(--pos-primary);
+        }
+
+        .pos-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            padding: 16px 30px;
+            border-radius: var(--pos-radius-screen);
+            font-size: 18px;
+            z-index: 2000;
+            max-width: var(--pos-dialog-w);
+            text-align: center;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+        }
+
+        /* 弹出方式 */
+        .pos-dialog[data-popup="fade"], .pos-toast[data-popup="fade"] { animation: dlgFade 0.3s ease; }
+        .pos-dialog[data-popup="scale"], .pos-toast[data-popup="scale"] { animation: dlgScale 0.3s cubic-bezier(.34,1.56,.64,1); }
+        .pos-dialog[data-popup="slide"], .pos-toast[data-popup="slide"] { animation: dlgSlide 0.3s ease; }
+        .pos-dialog[data-popup="bounce"], .pos-toast[data-popup="bounce"] { animation: dlgBounce 0.5s ease; }
+
+        @keyframes dlgFade {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.96); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes dlgScale {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.7); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes dlgSlide {
+            from { opacity: 0; transform: translate(-50%, 24px); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        @keyframes dlgBounce {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+            60% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
         /* 响应式 */
         @media (max-width: 650px) {
             .pos-container {
                 width: 100%;
                 padding: 20px;
             }
-            
+
             .amount-value {
                 font-size: 72px;
             }
-            
+
             .currency-symbol {
                 font-size: 42px;
             }
-            
+
             .btn-text {
                 font-size: 22px;
             }
-            
+
             .scale-control {
                 flex-direction: column;
             }
-            
+
             .scale-slider {
                 width: 150px;
             }
@@ -601,11 +1034,14 @@
         <span class="scale-value" id="scaleValue">100%</span>
     </div>
 
+    <!-- 已应用的设计 Token 展示条 -->
+    <div class="tokens-bar" id="tokensBar"></div>
+
     <div class="pos-wrapper" id="posWrapper">
-        <div class="pos-container">
+        <div class="pos-container" id="posContainer">
             <!-- 摄像头 -->
             <div class="camera"></div>
-            
+
             <!-- 屏幕区域 -->
             <div class="screen">
                 <!-- 状态栏 -->
@@ -615,7 +1051,7 @@
                             <div class="logo-l"></div>
                             <div class="logo-accent"></div>
                         </div>
-                        <div class="brand-name">拉卡拉</div>
+                        <div class="brand-name" id="brandName">拉卡拉</div>
                     </div>
                     <div class="status-icons">
                         <span>00:00</span>
@@ -636,47 +1072,17 @@
                             <div class="battery-tip"></div>
                             <span class="battery-percent">94</span>
                         </div>
+                        <div class="exit-btn" id="exitBtn" onclick="handleExit()">✕</div>
                     </div>
                 </div>
-                
-                <!-- 汉堡菜单 -->
-                <div class="menu-icon">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
-                
-                <!-- 金额显示 -->
-                <div class="amount-area">
-                    <div class="input-label">请输入金额</div>
-                    <div class="amount-display">
-                        <span class="currency-symbol">¥</span>
-                        <span class="amount-value" id="amountDisplay">0.00</span>
-                    </div>
-                </div>
-                
-                <!-- 功能按钮 -->
-                <div class="action-buttons">
-                    <div class="action-btn" onclick="handleCollect()">
-                        <div class="btn-icon orange">¥</div>
-                        <div class="btn-text">收款</div>
-                    </div>
-                    <div class="action-btn" onclick="handleInstallment()">
-                        <div class="btn-icon blue">支</div>
-                        <div class="btn-text">支付宝分期</div>
-                    </div>
-                </div>
-                
-                <!-- 分页指示器 -->
-                <div class="page-dots">
-                    <div class="dot active"></div>
-                    <div class="dot"></div>
-                </div>
-                
+
+                <!-- 动态页面内容区 -->
+                <div id="pageContent"></div>
+
                 <!-- M7水印 -->
                 <div class="watermark">M7</div>
             </div>
-            
+
             <!-- 实体按键区 -->
             <div class="keypad">
                 <!-- 第一行 -->
@@ -695,7 +1101,7 @@
                 <div class="key" onclick="handlePower()">
                     <div class="power-icon"></div>
                 </div>
-                
+
                 <!-- 第二行 -->
                 <div class="key" onclick="handleKeyPress('4')">
                     <div class="key-main">4</div>
@@ -713,7 +1119,7 @@
                     <div class="key-label">CANCEL</div>
                     <div class="key-underline red"></div>
                 </div>
-                
+
                 <!-- 第三行 -->
                 <div class="key" onclick="handleKeyPress('7')">
                     <div class="key-main">7</div>
@@ -731,7 +1137,7 @@
                     <div class="key-label">CLEAR</div>
                     <div class="key-underline amber"></div>
                 </div>
-                
+
                 <!-- 第四行 -->
                 <div class="key" onclick="handleShift()">
                     <div class="arrow-up"></div>
@@ -752,70 +1158,237 @@
     </div>
 
     <script>
+        // ============================================================
+        // 全局状态
+        // ============================================================
         let currentAmount = '';
-        const display = document.getElementById('amountDisplay');
+        let shownAmount = '0.00';
+        let currentPage = 'amount';
+
         const scaleSlider = document.getElementById('scaleSlider');
         const scaleValue = document.getElementById('scaleValue');
         const posWrapper = document.getElementById('posWrapper');
-        
+        const posContainer = document.getElementById('posContainer');
+        const tokensBar = document.getElementById('tokensBar');
+
+        // 当前设计配置(用于 Token 展示条)
+        const designConfig = {
+            menuPos: 'left',
+            amountPos: 'center',
+            btns: 'row',
+            page: 'amount',
+            iconStyle: 'classic',
+            menuStyle: 'lines',
+            active: 'filled',
+            press: 'scale',
+            exitBtn: false,
+            radiusLabel: '16px',
+            popup: 'fade',
+            dialogW: 360,
+            dialogOpacity: 0.85,
+        };
+
+        function getAmountEl() {
+            return document.getElementById('amountDisplay');
+        }
+
+        function setShownAmount(v) {
+            shownAmount = v;
+            const d = getAmountEl();
+            if (d) d.textContent = v;
+        }
+
+        function updateDisplay() {
+            const v = (currentAmount === '') ? '0.00' : (parseFloat(currentAmount) / 100).toFixed(2);
+            setShownAmount(v);
+        }
+
+        // ============================================================
+        // 动态页面渲染
+        // ============================================================
+        function pageTplAmount() {
+            return `
+                <div class="menu-icon"><div></div><div></div><div></div></div>
+                <div class="amount-area">
+                    <div class="input-label">请输入金额</div>
+                    <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
+                </div>
+                <div class="action-buttons">
+                    <div class="action-btn" onclick="handleCollect()"><div class="btn-icon orange">¥</div><div class="btn-text">收款</div></div>
+                    <div class="action-btn" onclick="handleInstallment()"><div class="btn-icon blue">支</div><div class="btn-text">支付宝分期</div></div>
+                </div>
+                <div class="page-dots"><div class="dot active"></div><div class="dot"></div></div>
+            `;
+        }
+
+        function pageTplMenu() {
+            return `
+                <div class="menu-icon"><div></div><div></div><div></div></div>
+                <div class="page-title">主菜单</div>
+                <div class="menu-grid">
+                    <div class="menu-item" onclick="renderPage('amount')"><div class="menu-item-icon">¥</div><span>收款</span></div>
+                    <div class="menu-item secondary" onclick="renderPage('amount')"><div class="menu-item-icon">支</div><span>分期</span></div>
+                    <div class="menu-item" onclick="renderPage('order')"><div class="menu-item-icon">查</div><span>查询</span></div>
+                    <div class="menu-item" onclick="renderPage('settings')"><div class="menu-item-icon">设</div><span>设置</span></div>
+                </div>
+                <div class="page-dots"><div class="dot"></div><div class="dot active"></div></div>
+            `;
+        }
+
+        function pageTplOrder() {
+            return `
+                <div class="page-title">交易记录</div>
+                <div class="order-list">
+                    <div class="order-row"><span class="order-name">便利店</span><span class="order-amt">¥25.00</span></div>
+                    <div class="order-row"><span class="order-name">餐饮</span><span class="order-amt">¥68.50</span></div>
+                    <div class="order-row"><span class="order-name">超市</span><span class="order-amt">¥128.00</span></div>
+                    <div class="order-row"><span class="order-name">停车费</span><span class="order-amt">¥10.00</span></div>
+                </div>
+                <div class="page-dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
+            `;
+        }
+
+        function pageTplSuccess() {
+            return `
+                <div class="success-wrap">
+                    <div class="success-icon">✓</div>
+                    <div class="success-title">收款成功</div>
+                    <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value">${shownAmount}</span></div>
+                    <div class="success-sub">支付方式:支付宝 · 交易号 20260803****</div>
+                    <div class="action-buttons">
+                        <div class="action-btn" onclick="renderPage('amount')"><div class="btn-icon blue">↺</div><div class="btn-text">继续收款</div></div>
+                    </div>
+                </div>
+                <div class="page-dots"><div class="dot"></div><div class="dot active"></div></div>
+            `;
+        }
+
+        function pageTplSettings() {
+            return `
+                <div class="page-title">设置</div>
+                <div class="setting-row"><span>交易提示音</span><div class="toggle on"></div></div>
+                <div class="setting-row"><span>小票打印</span><div class="toggle on"></div></div>
+                <div class="setting-row"><span>亮屏时长</span><span class="setting-val">30秒</span></div>
+                <div class="setting-row" style="cursor:pointer" onclick="handleExit()"><span>退出登录</span><span class="setting-val red">→</span></div>
+                <div class="page-dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
+            `;
+        }
+
+        function renderPage(name) {
+            if (!['amount', 'menu', 'order', 'success', 'settings'].includes(name)) name = 'amount';
+            currentPage = name;
+            designConfig.page = name;
+            const el = document.getElementById('pageContent');
+            const tpls = {
+                amount: pageTplAmount,
+                menu: pageTplMenu,
+                order: pageTplOrder,
+                success: pageTplSuccess,
+                settings: pageTplSettings,
+            };
+            el.innerHTML = tpls[name]();
+            const d = getAmountEl();
+            if (d) d.textContent = shownAmount;
+        }
+
+        // ============================================================
+        // 弹窗系统(尺寸/不透明度/弹出方式)
+        // ============================================================
+        function showDialog({ title = '', message = '', buttons = [] } = {}) {
+            const dlg = document.createElement('div');
+            dlg.className = 'pos-dialog';
+            dlg.style.width = designConfig.dialogW + 'px';
+            dlg.style.background = `rgba(20,22,26,${designConfig.dialogOpacity})`;
+            if (designConfig.popup !== 'none') dlg.setAttribute('data-popup', designConfig.popup);
+
+            const t = document.createElement('div');
+            t.className = 'dlg-title';
+            t.textContent = title;
+            const m = document.createElement('div');
+            m.className = 'dlg-msg';
+            m.textContent = message;
+            const bw = document.createElement('div');
+            bw.className = 'dlg-btns';
+            buttons.forEach((b) => {
+                const btn = document.createElement('button');
+                btn.className = 'dlg-btn' + (b.primary ? ' primary' : '');
+                btn.textContent = b.label;
+                btn.addEventListener('click', () => {
+                    dlg.remove();
+                    if (b.onClick) b.onClick();
+                });
+                bw.appendChild(btn);
+            });
+
+            dlg.appendChild(t);
+            dlg.appendChild(m);
+            if (buttons.length) dlg.appendChild(bw);
+            document.body.appendChild(dlg);
+            return dlg;
+        }
+
+        function showMessage(msg) {
+            const t = document.createElement('div');
+            t.className = 'pos-toast';
+            t.style.background = `rgba(20,22,26,${designConfig.dialogOpacity})`;
+            if (designConfig.popup !== 'none') t.setAttribute('data-popup', designConfig.popup);
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 1500);
+        }
+
+        // ============================================================
         // 缩放控制
+        // ============================================================
         scaleSlider.addEventListener('input', (e) => {
             const scale = e.target.value / 100;
             posWrapper.style.transform = `scale(${scale})`;
             scaleValue.textContent = e.target.value + '%';
         });
-        
-        // 按键音效
-        function playSound() {
-            // 可以添加按键音效
-        }
-        
-        // 数字按键处理
+
+        // 按键音效(占位)
+        function playSound() {}
+
+        // ============================================================
+        // 按键逻辑
+        // ============================================================
         function handleKeyPress(digit) {
             playSound();
-            
+            const wasAmount = currentPage === 'amount';
+            if (!wasAmount) renderPage('amount');
             if (currentAmount === '' || currentAmount === '0') {
                 currentAmount = digit;
             } else {
                 currentAmount += digit;
             }
-            
             updateDisplay();
-            event.target.closest('.key').classList.add('pressed');
-            setTimeout(() => event.target.closest('.key').classList.remove('pressed'), 200);
-        }
-        
-        // 更新显示
-        function updateDisplay() {
-            if (currentAmount === '') {
-                display.textContent = '0.00';
-                return;
+            const k = event.target.closest('.key');
+            if (k) {
+                k.classList.add('pressed');
+                setTimeout(() => k.classList.remove('pressed'), 200);
             }
-            
-            const num = parseFloat(currentAmount) / 100;
-            display.textContent = num.toFixed(2);
         }
-        
-        // 清除按键
+
         function handleClear() {
             playSound();
+            if (currentPage !== 'amount') { renderPage('amount'); return; }
             if (currentAmount.length > 0) {
                 currentAmount = currentAmount.slice(0, -1);
                 updateDisplay();
             }
         }
-        
-        // 取消按键
+
         function handleCancel() {
             playSound();
+            if (currentPage !== 'amount') { renderPage('amount'); return; }
             currentAmount = '';
             updateDisplay();
             showMessage('已取消');
         }
-        
-        // 确认按键
+
         function handleEnter() {
             playSound();
+            if (currentPage !== 'amount') { renderPage('amount'); return; }
             if (currentAmount === '' || currentAmount === '0') {
                 showMessage('请输入金额');
                 return;
@@ -823,71 +1396,61 @@
             const amount = (parseFloat(currentAmount) / 100).toFixed(2);
             showMessage(`确认金额: ¥${amount}`);
         }
-        
-        // 收款功能
+
         function handleCollect() {
             playSound();
             if (currentAmount === '' || currentAmount === '0') {
                 showMessage('请先输入金额');
                 return;
             }
-            const amount = (parseFloat(currentAmount) / 100).toFixed(2);
-            showMessage(`收款 ¥${amount}`);
+            renderPage('success');
         }
-        
-        // 支付宝分期
+
         function handleInstallment() {
             playSound();
             if (currentAmount === '' || currentAmount === '0') {
                 showMessage('请先输入金额');
                 return;
             }
-            const amount = (parseFloat(currentAmount) / 100).toFixed(2);
-            showMessage(`支付宝分期 ¥${amount}`);
+            renderPage('success');
         }
-        
-        // 电源按键
+
+        // 电源按键(退出机制演示)
         function handlePower() {
             playSound();
-            showMessage('电源');
+            showDialog({
+                title: '电源',
+                message: '确定要关机吗?',
+                buttons: [
+                    { label: '取消' },
+                    { label: '确定', primary: true, onClick: () => showMessage('已关机') },
+                ],
+            });
         }
-        
-        // Shift按键
+
+        // 界面退出机制
+        function handleExit() {
+            playSound();
+            showDialog({
+                title: '退出确认',
+                message: '确定要退出当前界面并返回主菜单吗?',
+                buttons: [
+                    { label: '取消' },
+                    { label: '退出', primary: true, onClick: () => renderPage('menu') },
+                ],
+            });
+        }
+
         function handleShift() {
             playSound();
             showMessage('↑');
         }
-        
-        // Down按键
+
         function handleDown() {
             playSound();
             showMessage('↓');
         }
-        
-        // 显示消息
-        function showMessage(msg) {
-            const toast = document.createElement('div');
-            toast.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.85);
-                color: white;
-                padding: 20px 40px;
-                border-radius: 12px;
-                font-size: 20px;
-                z-index: 1000;
-                animation: fadeInOut 1.5s;
-            `;
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                document.body.removeChild(toast);
-            }, 1500);
-        }
-        
+
         // 键盘支持
         document.addEventListener('keydown', (e) => {
             if (e.key >= '0' && e.key <= '9') {
@@ -900,18 +1463,215 @@
                 handleEnter();
             }
         });
-        
-        // 添加淡入淡出动画
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeInOut {
-                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-                20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+
+        // ============================================================
+        // URL 参数应用(全部设计维度)
+        // ============================================================
+        function applyRadius(r) {
+            root.style.setProperty('--pos-radius', r + 'px');
+            root.style.setProperty('--pos-radius-screen', Math.round(r * 2) + 'px');
+            root.style.setProperty('--pos-radius-key', Math.max(4, Math.round(r * 0.9)) + 'px');
+            root.style.setProperty('--pos-radius-icon', Math.max(2, Math.round(r * 0.6)) + 'px');
+            root.style.setProperty('--pos-radius-btn', Math.round(r * 2.6) + 'px');
+        }
+
+        function applyFont(pct) {
+            const f = parseFloat(pct) || 100;
+            root.style.setProperty('--pos-amount-font', Math.round(96 * f / 100) + 'px');
+            root.style.setProperty('--pos-symbol-font', Math.round(56 * f / 100) + 'px');
+        }
+
+        function applyUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            root = document.documentElement;
+
+            function setColor(name, prop) {
+                const v = params.get(name);
+                if (v && /^[0-9a-fA-F]{6}$/.test(v)) {
+                    root.style.setProperty(prop, '#' + v.toLowerCase());
+                }
             }
-        `;
-        document.head.appendChild(style);
+
+            // 1. 配色
+            setColor('primary', '--pos-primary');
+            setColor('secondary', '--pos-secondary');
+            setColor('accent', '--pos-accent');
+            setColor('text', '--pos-text');
+            setColor('bg', '--pos-bg');
+            setColor('body', '--pos-body');
+            setColor('label', '--pos-label');
+            setColor('status', '--pos-status');
+            setColor('keyBg', '--pos-key-bg');
+            setColor('keyText', '--pos-key-text');
+            setColor('keyBorder', '--pos-key-border');
+            setColor('success', '--pos-success');
+
+            // 品牌名
+            const title = params.get('title');
+            if (title) {
+                try {
+                    document.getElementById('brandName').textContent = decodeURIComponent(title);
+                } catch (e) {
+                    document.getElementById('brandName').textContent = title;
+                }
+            }
+
+            // 金额
+            const amount = params.get('amount');
+            if (amount !== null && !isNaN(parseFloat(amount))) {
+                currentAmount = String(Math.round(parseFloat(amount) * 100));
+                updateDisplay();
+            }
+
+            // 2. 像素与组件尺寸
+            const size = params.get('size') || params.get('screen');
+            if (size) {
+                if (/^\d{3,4}$/.test(size)) {
+                    root.style.setProperty('--pos-width', parseInt(size, 10) + 'px');
+                } else if (['small', 'medium', 'large'].includes(size)) {
+                    posContainer.setAttribute('data-size', size);
+                }
+            }
+            const pad = params.get('pad');
+            if (pad && /^\d{2,3}$/.test(pad)) root.style.setProperty('--pos-pad', parseInt(pad, 10) + 'px');
+            const gap = params.get('gap');
+            if (gap && /^\d{1,2}$/.test(gap)) root.style.setProperty('--pos-gap', parseInt(gap, 10) + 'px');
+            const btnH = params.get('btnH');
+            if (btnH && /^\d{2,3}$/.test(btnH)) root.style.setProperty('--pos-btn-h', parseInt(btnH, 10) + 'px');
+            const keyH = params.get('keyH');
+            if (keyH && /^\d{2,3}$/.test(keyH)) root.style.setProperty('--pos-key-h', parseInt(keyH, 10) + 'px');
+            const font = params.get('font');
+            if (font && /^\d{2,3}$/.test(font)) applyFont(font);
+
+            // 3. 菜单布局
+            const menuPos = params.get('menuPos') || params.get('iconPos');
+            if (menuPos && ['left', 'center', 'right'].includes(menuPos)) {
+                designConfig.menuPos = menuPos;
+                posContainer.setAttribute('data-menu', menuPos);
+            }
+            const amountPos = params.get('amountPos') || params.get('iconPos');
+            if (amountPos && ['left', 'center', 'right'].includes(amountPos)) {
+                designConfig.amountPos = amountPos;
+                posContainer.setAttribute('data-amount', amountPos);
+            }
+            const menuStyle = params.get('menuStyle');
+            if (menuStyle && ['lines', 'dots', 'grid'].includes(menuStyle)) {
+                designConfig.menuStyle = menuStyle;
+                posContainer.setAttribute('data-menustyle', menuStyle);
+            }
+
+            // 4. 前后景色在配色中体现
+            // 5. 选中效果
+            const active = params.get('active');
+            if (active && ['filled', 'outline', 'glow', 'underline'].includes(active)) {
+                designConfig.active = active;
+                posContainer.setAttribute('data-active', active);
+            }
+            const press = params.get('press');
+            if (press && ['scale', 'ripple', 'none'].includes(press)) {
+                designConfig.press = press;
+                posContainer.setAttribute('data-press', press);
+            }
+
+            // 6. 退出机制
+            const exitBtn = params.get('exitBtn');
+            if (exitBtn === 'true' || exitBtn === '1') {
+                designConfig.exitBtn = true;
+                posContainer.setAttribute('data-exit', 'true');
+            }
+
+            // 7. 动态页面
+            const page = params.get('page');
+            if (page && ['amount', 'menu', 'order', 'success', 'settings'].includes(page)) {
+                designConfig.page = page;
+            }
+
+            // 8. 应景icon
+            const iconStyle = params.get('iconStyle');
+            if (iconStyle && ['classic', 'round', 'square', 'line'].includes(iconStyle)) {
+                designConfig.iconStyle = iconStyle;
+                posContainer.setAttribute('data-iconstyle', iconStyle);
+            }
+
+            // 9. 组件弧度
+            const radius = params.get('radius');
+            if (radius) {
+                const rMap = { sharp: 4, soft: 12, round: 20 };
+                if (rMap[radius] !== undefined) {
+                    applyRadius(rMap[radius]);
+                    designConfig.radiusLabel = radius;
+                } else if (/^\d{1,2}$/.test(radius)) {
+                    const rv = parseInt(radius, 10);
+                    applyRadius(rv);
+                    designConfig.radiusLabel = rv + 'px';
+                }
+            }
+
+            // 10. 弹窗
+            const dialogW = params.get('dialogW');
+            if (dialogW && /^\d{2,4}$/.test(dialogW)) {
+                designConfig.dialogW = parseInt(dialogW, 10);
+                root.style.setProperty('--pos-dialog-w', designConfig.dialogW + 'px');
+            }
+            const dialogOpacity = params.get('dialogOpacity');
+            if (dialogOpacity) {
+                const o = parseFloat(dialogOpacity);
+                if (o >= 0 && o <= 100) {
+                    designConfig.dialogOpacity = o / 100;
+                }
+            }
+            const popup = params.get('popup');
+            if (popup && ['fade', 'slide', 'scale', 'bounce', 'none'].includes(popup)) {
+                designConfig.popup = popup;
+            }
+
+            // 功能按钮排布
+            const btns = params.get('btns');
+            if (btns && ['row', 'stack'].includes(btns)) {
+                designConfig.btns = btns;
+                posContainer.setAttribute('data-btns', btns);
+            }
+
+            // 渲染初始页面
+            renderPage(designConfig.page);
+        }
+
+        // ============================================================
+        // 设计 Token 展示条
+        // ============================================================
+        function refreshTokens() {
+            const cs = getComputedStyle(posContainer);
+            const rootCS = getComputedStyle(document.documentElement);
+            const roles = [
+                ['primary', '--pos-primary', '主色'],
+                ['secondary', '--pos-secondary', '辅色'],
+                ['accent', '--pos-accent', '强调色'],
+                ['text', '--pos-text', '文字色'],
+                ['bg', '--pos-bg', '屏幕'],
+                ['body', '--pos-body', '机身'],
+            ];
+            const chips = roles.map(([key, prop, label]) => {
+                const val = rootCS.getPropertyValue(prop).trim();
+                return `<span class="token-chip"><i style="background:${val}"></i><b>${label}</b>${val}</span>`;
+            }).join('');
+
+            const pageLabels = { amount: '输入金额', menu: '主菜单', order: '交易记录', success: '收款成功', settings: '设置' };
+            tokensBar.innerHTML = chips +
+                `<span class="token-chip"><b>尺寸</b>${cs.width || 'auto'}</span>` +
+                `<span class="token-chip"><b>菜单</b>${designConfig.menuPos}/${designConfig.menuStyle}</span>` +
+                `<span class="token-chip"><b>图标</b>${designConfig.iconStyle}</span>` +
+                `<span class="token-chip"><b>按钮</b>${designConfig.btns === 'stack' ? '竖排' : '并排'}</span>` +
+                `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
+                `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
+                `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
+                `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
+        }
+
+        let root = document.documentElement;
+        applyUrlParams();
+        refreshTokens();
+        window.addEventListener('resize', refreshTokens);
+        window.addEventListener('load', refreshTokens);
     </script>
 </body>
 </html>
