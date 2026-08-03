@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拉卡拉POS机模拟器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        /* 缩放控制条 */
+        .scale-control {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #ffffff;
+        }
+        
+        .scale-label {
+            font-size: 14px;
+            color: #aaa;
+        }
+        
+        .scale-slider {
+            width: 200px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .scale-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: #4285f4;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.5);
+        }
+        
+        .scale-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: #4285f4;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .scale-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4285f4;
+            min-width: 50px;
+            text-align: right;
+        }
+        
+        /* POS容器包装 */
+        .pos-wrapper {
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+        }
+        
+        .pos-container {
+            background: #eeede9;
+            border-radius: 40px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            width: 600px;
+        }
+        
+        /* 摄像头 */
+        .camera {
+            width: 16px;
+            height: 16px;
+            background: #8c8a84;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+        }
+        
+        /* 屏幕区域 */
+        .screen {
+            background: #121419;
+            border-radius: 30px;
+            padding: 28px;
+            margin-bottom: 30px;
+            min-height: 420px;
+            position: relative;
+        }
+        
+        /* 状态栏 */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .brand-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        /* 拉卡拉Logo - 精细版 */
+        .logo-box {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+        
+        /* Logo内的"L"形状 */
+        .logo-l {
+            position: relative;
+            width: 18px;
+            height: 22px;
+        }
+        
+        .logo-l::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 22px;
+            background: white;
+            border-radius: 2px;
+        }
+        
+        .logo-l::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 18px;
+            height: 4px;
+            background: white;
+            border-radius: 2px;
+        }
+        
+        /* Logo装饰线条 */
+        .logo-accent {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 10px;
+            height: 10px;
+            border-top: 2px solid rgba(255, 255, 255, 0.4);
+            border-right: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 0 4px 0 0;
+        }
+        
+        .brand-name {
+            color: #4285f4;
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(66, 133, 244, 0.3);
+        }
+        
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #828791;
+            font-size: 16px;
+        }
+        
+        /* WiFi图标 */
+        .wifi-icon {
+            width: 20px;
+            height: 16px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .wifi-icon::before,
+        .wifi-icon::after {
+            content: '';
+            position: absolute;
+            border: 2px solid #828791;
+            border-radius: 50%;
+        }
+        
+        .wifi-icon::before {
+            width: 18px;
+            height: 18px;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            bottom: 0;
+            left: 1px;
+        }
+        
+        .wifi-icon::after {
+            width: 12px;
+            height: 12px;
+            border-bottom: none;
+            border-left: none;
+            border-right: none;
+            bottom: 0;
+            left: 4px;
+        }
+        
+        .wifi-dot {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #828791;
+            border-radius: 50%;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        /* 信号强度 */
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            height: 16px;
+        }
+        
+        .signal-bar {
+            width: 4px;
+            background: #828791;
+            border-radius: 1px;
+        }
+        
+        .signal-bar:nth-child(1) { height: 4px; }
+        .signal-bar:nth-child(2) { height: 7px; }
+        .signal-bar:nth-child(3) { height: 10px; }
+        .signal-bar:nth-child(4) { height: 13px; }
+        .signal-bar:nth-child(5) { height: 16px; }
+        
+        /* 电池 */
+        .battery-icon {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        
+        .battery-body {
+            width: 24px;
+            height: 12px;
+            border: 2px solid #828791;
+            border-radius: 3px;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        .battery-level {
+            height: 100%;
+            background: #828791;
+            border-radius: 1px;
+            width: 100%;
+        }
+        
+        .battery-tip {
+            width: 2px;
+            height: 6px;
+            background: #828791;
+            border-radius: 0 2px 2px 0;
+        }
+        
+        .battery-percent {
+            font-size: 12px;
+            color: #828791;
+            margin-left: 4px;
+        }
+        
+        /* 汉堡菜单 */
+        .menu-icon {
+            width: 28px;
+            margin-bottom: 30px;
+        }
+        
+        .menu-icon div {
+            height: 3px;
+            background: #4285f4;
+            margin: 7px 0;
+            border-radius: 2px;
+            box-shadow: 0 0 6px rgba(66, 133, 244, 0.4);
+        }
+        
+        /* 金额显示区 */
+        .amount-area {
+            text-align: center;
+            margin: 50px 0 40px;
+        }
+        
+        .input-label {
+            color: #4285f4;
+            font-size: 22px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(66, 133, 244, 0.3);
+        }
+        
+        .amount-display {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            gap: 5px;
+        }
+        
+        .currency-symbol {
+            color: #ffc800;
+            font-size: 56px;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255, 200, 0, 0.4);
+        }
+        
+        .amount-value {
+            color: #ffffff;
+            font-size: 96px;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+        
+        /* 功能按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            background: #232830;
+            border: 2px solid #3c4655;
+            border-radius: 44px;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .action-btn:hover {
+            background: #2d3542;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .btn-icon.orange {
+            background: linear-gradient(135deg, #e68232 0%, #d4701f 100%);
+            box-shadow: 0 2px 8px rgba(230, 130, 50, 0.3);
+        }
+        
+        .btn-icon.blue {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+        }
+        
+        .btn-text {
+            color: #dcdce1;
+            font-size: 26px;
+            font-weight: 500;
+        }
+        
+        /* 分页指示器 */
+        .page-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #3c414b;
+        }
+        
+        .dot.active {
+            width: 20px;
+            border-radius: 5px;
+            background: #4285f4;
+            box-shadow: 0 0 8px rgba(66, 133, 244, 0.5);
+        }
+        
+        /* M7水印 */
+        .watermark {
+            position: absolute;
+            bottom: 25px;
+            right: 28px;
+            color: #505561;
+            font-size: 24px;
+            font-weight: 500;
+            opacity: 0.6;
+        }
+        
+        /* 实体按键区 */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        
+        .key {
+            background: #f7f6f3;
+            border: 2px solid #ceccc6;
+            border-radius: 16px;
+            padding: 28px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+            min-height: 110px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .key:hover {
+            background: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .key:active {
+            transform: translateY(0);
+            background: #f0efec;
+        }
+        
+        .key-main {
+            font-size: 58px;
+            font-weight: bold;
+            color: #373737;
+            line-height: 1;
+        }
+        
+        .key-sub {
+            font-size: 18px;
+            color: #969488;
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+        }
+        
+        .key-label {
+            font-size: 22px;
+            font-weight: bold;
+            color: #373737;
+            margin-bottom: 8px;
+        }
+        
+        .key-underline {
+            width: 70%;
+            height: 5px;
+            border-radius: 3px;
+        }
+        
+        .key-underline.red {
+            background: #e04646;
+        }
+        
+        .key-underline.amber {
+            background: #e0b237;
+        }
+        
+        .key-underline.green {
+            background: #3fa876;
+        }
+        
+        /* 箭头图标 */
+        .arrow-up, .arrow-down {
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+        }
+        
+        .arrow-up {
+            border-bottom: 26px solid #373737;
+        }
+        
+        .arrow-down {
+            border-top: 26px solid #373737;
+        }
+        
+        /* 电源图标 */
+        .power-icon {
+            width: 44px;
+            height: 44px;
+            border: 5px solid #373737;
+            border-radius: 50%;
+            border-top-color: transparent;
+            position: relative;
+        }
+        
+        .power-icon::before {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 20px;
+            background: #373737;
+            top: -26px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 3px;
+        }
+        
+        /* 按键点击反馈 */
+        @keyframes keypress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); }
+            100% { transform: scale(1); }
+        }
+        
+        .key.pressed {
+            animation: keypress 0.2s;
+        }
+        
+        /* 响应式 */
+        @media (max-width: 650px) {
+            .pos-container {
+                width: 100%;
+                padding: 20px;
+            }
+            
+            .amount-value {
+                font-size: 72px;
+            }
+            
+            .currency-symbol {
+                font-size: 42px;
+            }
+            
+            .btn-text {
+                font-size: 22px;
+            }
+            
+            .scale-control {
+                flex-direction: column;
+            }
+            
+            .scale-slider {
+                width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 缩放控制条 -->
+    <div class="scale-control">
+        <span class="scale-label">POS大小:</span>
+        <input type="range" class="scale-slider" id="scaleSlider" min="50" max="120" value="100" step="5">
+        <span class="scale-value" id="scaleValue">100%</span>
+    </div>
+
+    <div class="pos-wrapper" id="posWrapper">
+        <div class="pos-container">
+            <!-- 摄像头 -->
+            <div class="camera"></div>
+            
+            <!-- 屏幕区域 -->
+            <div class="screen">
+                <!-- 状态栏 -->
+                <div class="status-bar">
+                    <div class="brand-area">
+                        <div class="logo-box">
+                            <div class="logo-l"></div>
+                            <div class="logo-accent"></div>
+                        </div>
+                        <div class="brand-name">拉卡拉</div>
+                    </div>
+                    <div class="status-icons">
+                        <span>00:00</span>
+                        <div class="wifi-icon">
+                            <div class="wifi-dot"></div>
+                        </div>
+                        <div class="signal-bars">
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                            <div class="signal-bar"></div>
+                        </div>
+                        <div class="battery-icon">
+                            <div class="battery-body">
+                                <div class="battery-level"></div>
+                            </div>
+                            <div class="battery-tip"></div>
+                            <span class="battery-percent">94</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 汉堡菜单 -->
+                <div class="menu-icon">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                
+                <!-- 金额显示 -->
+                <div class="amount-area">
+                    <div class="input-label">请输入金额</div>
+                    <div class="amount-display">
+                        <span class="currency-symbol">¥</span>
+                        <span class="amount-value" id="amountDisplay">0.00</span>
+                    </div>
+                </div>
+                
+                <!-- 功能按钮 -->
+                <div class="action-buttons">
+                    <div class="action-btn" onclick="handleCollect()">
+                        <div class="btn-icon orange">¥</div>
+                        <div class="btn-text">收款</div>
+                    </div>
+                    <div class="action-btn" onclick="handleInstallment()">
+                        <div class="btn-icon blue">支</div>
+                        <div class="btn-text">支付宝分期</div>
+                    </div>
+                </div>
+                
+                <!-- 分页指示器 -->
+                <div class="page-dots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
+                </div>
+                
+                <!-- M7水印 -->
+                <div class="watermark">M7</div>
+            </div>
+            
+            <!-- 实体按键区 -->
+            <div class="keypad">
+                <!-- 第一行 -->
+                <div class="key" onclick="handleKeyPress('1')">
+                    <div class="key-main">1</div>
+                    <div class="key-sub">QZ</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('2')">
+                    <div class="key-main">2</div>
+                    <div class="key-sub">ABC</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('3')">
+                    <div class="key-main">3</div>
+                    <div class="key-sub">DEF</div>
+                </div>
+                <div class="key" onclick="handlePower()">
+                    <div class="power-icon"></div>
+                </div>
+                
+                <!-- 第二行 -->
+                <div class="key" onclick="handleKeyPress('4')">
+                    <div class="key-main">4</div>
+                    <div class="key-sub">GHI</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('5')">
+                    <div class="key-main">5</div>
+                    <div class="key-sub">JKL</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('6')">
+                    <div class="key-main">6</div>
+                    <div class="key-sub">MNO</div>
+                </div>
+                <div class="key" onclick="handleCancel()">
+                    <div class="key-label">CANCEL</div>
+                    <div class="key-underline red"></div>
+                </div>
+                
+                <!-- 第三行 -->
+                <div class="key" onclick="handleKeyPress('7')">
+                    <div class="key-main">7</div>
+                    <div class="key-sub">PRS</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('8')">
+                    <div class="key-main">8</div>
+                    <div class="key-sub">TUV</div>
+                </div>
+                <div class="key" onclick="handleKeyPress('9')">
+                    <div class="key-main">9</div>
+                    <div class="key-sub">WXY</div>
+                </div>
+                <div class="key" onclick="handleClear()">
+                    <div class="key-label">CLEAR</div>
+                    <div class="key-underline amber"></div>
+                </div>
+                
+                <!-- 第四行 -->
+                <div class="key" onclick="handleShift()">
+                    <div class="arrow-up"></div>
+                </div>
+                <div class="key" onclick="handleKeyPress('0')">
+                    <div class="key-main">0</div>
+                    <div class="key-sub">@</div>
+                </div>
+                <div class="key" onclick="handleDown()">
+                    <div class="arrow-down"></div>
+                </div>
+                <div class="key" onclick="handleEnter()">
+                    <div class="key-label">ENTER</div>
+                    <div class="key-underline green"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAmount = '';
+        const display = document.getElementById('amountDisplay');
+        const scaleSlider = document.getElementById('scaleSlider');
+        const scaleValue = document.getElementById('scaleValue');
+        const posWrapper = document.getElementById('posWrapper');
+        
+        // 缩放控制
+        scaleSlider.addEventListener('input', (e) => {
+            const scale = e.target.value / 100;
+            posWrapper.style.transform = `scale(${scale})`;
+            scaleValue.textContent = e.target.value + '%';
+        });
+        
+        // 按键音效
+        function playSound() {
+            // 可以添加按键音效
+        }
+        
+        // 数字按键处理
+        function handleKeyPress(digit) {
+            playSound();
+            
+            if (currentAmount === '' || currentAmount === '0') {
+                currentAmount = digit;
+            } else {
+                currentAmount += digit;
+            }
+            
+            updateDisplay();
+            event.target.closest('.key').classList.add('pressed');
+            setTimeout(() => event.target.closest('.key').classList.remove('pressed'), 200);
+        }
+        
+        // 更新显示
+        function updateDisplay() {
+            if (currentAmount === '') {
+                display.textContent = '0.00';
+                return;
+            }
+            
+            const num = parseFloat(currentAmount) / 100;
+            display.textContent = num.toFixed(2);
+        }
+        
+        // 清除按键
+        function handleClear() {
+            playSound();
+            if (currentAmount.length > 0) {
+                currentAmount = currentAmount.slice(0, -1);
+                updateDisplay();
+            }
+        }
+        
+        // 取消按键
+        function handleCancel() {
+            playSound();
+            currentAmount = '';
+            updateDisplay();
+            showMessage('已取消');
+        }
+        
+        // 确认按键
+        function handleEnter() {
+            playSound();
+            if (currentAmount === '' || currentAmount === '0') {
+                showMessage('请输入金额');
+                return;
+            }
+            const amount = (parseFloat(currentAmount) / 100).toFixed(2);
+            showMessage(`确认金额: ¥${amount}`);
+        }
+        
+        // 收款功能
+        function handleCollect() {
+            playSound();
+            if (currentAmount === '' || currentAmount === '0') {
+                showMessage('请先输入金额');
+                return;
+            }
+            const amount = (parseFloat(currentAmount) / 100).toFixed(2);
+            showMessage(`收款 ¥${amount}`);
+        }
+        
+        // 支付宝分期
+        function handleInstallment() {
+            playSound();
+            if (currentAmount === '' || currentAmount === '0') {
+                showMessage('请先输入金额');
+                return;
+            }
+            const amount = (parseFloat(currentAmount) / 100).toFixed(2);
+            showMessage(`支付宝分期 ¥${amount}`);
+        }
+        
+        // 电源按键
+        function handlePower() {
+            playSound();
+            showMessage('电源');
+        }
+        
+        // Shift按键
+        function handleShift() {
+            playSound();
+            showMessage('↑');
+        }
+        
+        // Down按键
+        function handleDown() {
+            playSound();
+            showMessage('↓');
+        }
+        
+        // 显示消息
+        function showMessage(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.85);
+                color: white;
+                padding: 20px 40px;
+                border-radius: 12px;
+                font-size: 20px;
+                z-index: 1000;
+                animation: fadeInOut 1.5s;
+            `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 1500);
+        }
+        
+        // 键盘支持
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') {
+                handleKeyPress(e.key);
+            } else if (e.key === 'Backspace') {
+                handleClear();
+            } else if (e.key === 'Escape') {
+                handleCancel();
+            } else if (e.key === 'Enter') {
+                handleEnter();
+            }
+        });
+        
+        // 添加淡入淡出动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
