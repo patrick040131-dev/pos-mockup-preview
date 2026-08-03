@@ -59,6 +59,23 @@
             /* 弹窗 */
             --pos-dialog-w: 360px;
             --pos-dialog-opacity: 0.85;
+
+            /* 派生颜色(由 JS 按主题计算,兼容不支持 color-mix 的浏览器) */
+            --pos-primary-to: #3060b0;
+            --pos-primary-faint: rgba(66,133,244,0.30);
+            --pos-primary-line: rgba(66,133,244,0.40);
+            --pos-primary-glow: rgba(66,133,244,0.50);
+            --pos-primary-wash: rgba(66,133,244,0.15);
+            --pos-primary-ripple: rgba(66,133,244,0.35);
+            --pos-secondary-to: #b46627;
+            --pos-secondary-faint: rgba(230,130,50,0.30);
+            --pos-accent-line: rgba(255,200,0,0.40);
+            --pos-label-faint: rgba(66,133,244,0.30);
+            --pos-text-faint: rgba(255,255,255,0.20);
+            --pos-success-glow: rgba(63,168,118,0.50);
+            --pos-row-bg: rgba(255,255,255,0.06);
+            --pos-row-border: rgba(255,255,255,0.15);
+            --pos-key-sub: #a1a09e;
         }
 
         body {
@@ -107,7 +124,7 @@
             background: var(--pos-primary);
             border-radius: 50%;
             cursor: pointer;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 50%, transparent);
+            box-shadow: 0 2px 8px var(--pos-primary-glow);
         }
 
         .scale-slider::-moz-range-thumb {
@@ -219,13 +236,13 @@
         .logo-box {
             width: 36px;
             height: 36px;
-            background: linear-gradient(135deg, var(--pos-primary) 0%, color-mix(in srgb, var(--pos-primary) 72%, black) 100%);
+            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-primary-to) 100%);
             border-radius: var(--pos-radius);
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
+            box-shadow: 0 2px 8px var(--pos-primary-faint);
         }
 
         /* Logo内的"L"形状 */
@@ -274,7 +291,7 @@
             font-size: 28px;
             font-weight: bold;
             letter-spacing: 1px;
-            text-shadow: 0 0 10px color-mix(in srgb, var(--pos-primary) 30%, transparent);
+            text-shadow: 0 0 10px var(--pos-primary-faint);
         }
 
         .status-icons {
@@ -399,14 +416,14 @@
             align-items: center;
             justify-content: center;
             color: var(--pos-primary);
-            border: 1px solid color-mix(in srgb, var(--pos-primary) 40%, transparent);
+            border: 1px solid var(--pos-primary-line);
             cursor: pointer;
             font-size: 14px;
             font-weight: bold;
             line-height: 1;
         }
         .exit-btn:hover {
-            background: color-mix(in srgb, var(--pos-primary) 15%, transparent);
+            background: var(--pos-primary-wash);
         }
         .pos-container[data-exit="true"] .exit-btn {
             display: flex;
@@ -425,7 +442,7 @@
             background: var(--pos-primary);
             margin: 7px 0;
             border-radius: 2px;
-            box-shadow: 0 0 6px color-mix(in srgb, var(--pos-primary) 40%, transparent);
+            box-shadow: 0 0 6px var(--pos-primary-line);
         }
 
         /* 菜单位置 */
@@ -475,7 +492,7 @@
             color: var(--pos-label);
             font-size: 22px;
             margin-bottom: 15px;
-            text-shadow: 0 0 8px color-mix(in srgb, var(--pos-label) 30%, transparent);
+            text-shadow: 0 0 8px var(--pos-label-faint);
         }
 
         .amount-display {
@@ -489,7 +506,7 @@
             color: var(--pos-accent);
             font-size: var(--pos-symbol-font);
             font-weight: bold;
-            text-shadow: 0 0 15px color-mix(in srgb, var(--pos-accent) 40%, transparent);
+            text-shadow: 0 0 15px var(--pos-accent-line);
         }
 
         .amount-value {
@@ -497,7 +514,7 @@
             font-size: var(--pos-amount-font);
             font-weight: bold;
             line-height: 1;
-            text-shadow: 0 0 20px color-mix(in srgb, var(--pos-text) 20%, transparent);
+            text-shadow: 0 0 20px var(--pos-text-faint);
         }
 
         /* 功能按钮(组件尺寸 / 弧度 / 应景icon) */
@@ -546,13 +563,13 @@
         }
 
         .btn-icon.orange {
-            background: linear-gradient(135deg, var(--pos-secondary) 0%, color-mix(in srgb, var(--pos-secondary) 78%, black) 100%);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-secondary) 30%, transparent);
+            background: linear-gradient(135deg, var(--pos-secondary) 0%, var(--pos-secondary-to) 100%);
+            box-shadow: 0 2px 8px var(--pos-secondary-faint);
         }
 
         .btn-icon.blue {
-            background: linear-gradient(135deg, var(--pos-primary) 0%, color-mix(in srgb, var(--pos-primary) 72%, black) 100%);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
+            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-primary-to) 100%);
+            box-shadow: 0 2px 8px var(--pos-primary-faint);
         }
 
         .btn-text {
@@ -598,7 +615,7 @@
             width: 20px;
             border-radius: 5px;
             background: var(--pos-primary);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--pos-primary) 50%, transparent);
+            box-shadow: 0 0 8px var(--pos-primary-glow);
         }
 
         /* 选中效果样式 */
@@ -611,8 +628,8 @@
             box-shadow: none;
         }
         .pos-container[data-active="glow"] .dot.active {
-            box-shadow: 0 0 14px color-mix(in srgb, var(--pos-primary) 80%, transparent),
-                        0 0 4px color-mix(in srgb, var(--pos-primary) 60%, transparent);
+            box-shadow: 0 0 14px var(--pos-primary-glow),
+                        0 0 4px var(--pos-primary-glow);
         }
         .pos-container[data-active="underline"] .dot.active {
             width: 20px;
@@ -657,11 +674,11 @@
             font-weight: bold;
             color: #fff;
             background: var(--pos-primary);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-primary) 30%, transparent);
+            box-shadow: 0 2px 8px var(--pos-primary-faint);
         }
         .menu-item.secondary .menu-item-icon {
             background: var(--pos-secondary);
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--pos-secondary) 30%, transparent);
+            box-shadow: 0 2px 8px var(--pos-secondary-faint);
         }
         .menu-item span {
             color: var(--pos-text);
@@ -678,8 +695,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: color-mix(in srgb, var(--pos-text) 6%, transparent);
-            border: 1px solid color-mix(in srgb, var(--pos-text) 15%, transparent);
+            background: var(--pos-row-bg);
+            border: 1px solid var(--pos-row-border);
             border-radius: var(--pos-radius-key);
             padding: 14px 16px;
         }
@@ -709,7 +726,7 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 18px;
-            box-shadow: 0 4px 18px color-mix(in srgb, var(--pos-success) 50%, transparent);
+            box-shadow: 0 4px 18px var(--pos-success-glow);
         }
         .success-title {
             color: var(--pos-text);
@@ -728,7 +745,7 @@
             justify-content: space-between;
             align-items: center;
             padding: 14px 16px;
-            border-bottom: 1px solid color-mix(in srgb, var(--pos-text) 15%, transparent);
+            border-bottom: 1px solid var(--pos-row-border);
         }
         .setting-row span {
             color: var(--pos-text);
@@ -820,7 +837,7 @@
 
         .key-sub {
             font-size: 18px;
-            color: color-mix(in srgb, var(--pos-key-text) 55%, var(--pos-key-bg));
+            color: var(--pos-key-sub);
             position: absolute;
             bottom: 14px;
             right: 14px;
@@ -897,7 +914,7 @@
         }
 
         @keyframes keypressRipple {
-            0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pos-primary) 35%, transparent); }
+            0% { box-shadow: 0 0 0 0 var(--pos-primary-ripple); }
             100% { box-shadow: 0 0 0 20px transparent; }
         }
 
@@ -1481,14 +1498,65 @@
             root.style.setProperty('--pos-symbol-font', Math.round(56 * f / 100) + 'px');
         }
 
+        function hexToRgb(hex) {
+            hex = hex.replace('#', '');
+            return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+        }
+
+        function rgbaStr(rgb, a) { return 'rgba(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ',' + a + ')'; }
+
+        function darken(rgb, f) { return rgb.map(function (c) { return Math.round(c * f); }); }
+
+        function mixColors(a, b, t) { return a.map(function (c, i) { return Math.round(c + (b[i] - c) * t); }); }
+
+        function toHex(rgb) {
+            return '#' + rgb.map(function (c) {
+                c = Math.max(0, Math.min(255, c));
+                return c.toString(16).padStart(2, '0');
+            }).join('');
+        }
+
+        function computeShades(pal) {
+            const P = hexToRgb(pal.primary);
+            const S = hexToRgb(pal.secondary);
+            const A = hexToRgb(pal.accent);
+            const T = hexToRgb(pal.text);
+            const L = hexToRgb(pal.label);
+            const G = hexToRgb(pal.success);
+            const KT = hexToRgb(pal.keyText);
+            const KB = hexToRgb(pal.keyBg);
+            root.style.setProperty('--pos-primary-to', toHex(darken(P, 0.72)));
+            root.style.setProperty('--pos-primary-faint', rgbaStr(P, 0.30));
+            root.style.setProperty('--pos-primary-line', rgbaStr(P, 0.40));
+            root.style.setProperty('--pos-primary-glow', rgbaStr(P, 0.50));
+            root.style.setProperty('--pos-primary-wash', rgbaStr(P, 0.15));
+            root.style.setProperty('--pos-primary-ripple', rgbaStr(P, 0.35));
+            root.style.setProperty('--pos-secondary-to', toHex(darken(S, 0.78)));
+            root.style.setProperty('--pos-secondary-faint', rgbaStr(S, 0.30));
+            root.style.setProperty('--pos-accent-line', rgbaStr(A, 0.40));
+            root.style.setProperty('--pos-label-faint', rgbaStr(L, 0.30));
+            root.style.setProperty('--pos-text-faint', rgbaStr(T, 0.20));
+            root.style.setProperty('--pos-success-glow', rgbaStr(G, 0.50));
+            root.style.setProperty('--pos-row-bg', rgbaStr(T, 0.06));
+            root.style.setProperty('--pos-row-border', rgbaStr(T, 0.15));
+            root.style.setProperty('--pos-key-sub', toHex(mixColors(KT, KB, 0.55)));
+        }
+
         function applyUrlParams() {
             const params = new URLSearchParams(window.location.search);
             root = document.documentElement;
+            const palette = {
+                primary: '#4285f4', secondary: '#e68232', accent: '#ffc800',
+                text: '#ffffff', bg: '#121419', body: '#eeede9', label: '#4285f4',
+                status: '#828791', keyBg: '#f7f6f3', keyText: '#373737',
+                keyBorder: '#ceccc6', success: '#3fa876'
+            };
 
             function setColor(name, prop) {
                 const v = params.get(name);
                 if (v && /^[0-9a-fA-F]{6}$/.test(v)) {
-                    root.style.setProperty(prop, '#' + v.toLowerCase());
+                    palette[name] = '#' + v.toLowerCase();
+                    root.style.setProperty(prop, palette[name]);
                 }
             }
 
@@ -1505,6 +1573,7 @@
             setColor('keyText', '--pos-key-text');
             setColor('keyBorder', '--pos-key-border');
             setColor('success', '--pos-success');
+            computeShades(palette);
 
             // 品牌名
             const title = params.get('title');
