@@ -102,18 +102,7 @@
             gap: 20px;
         }
 
-        /* 缩放控制条 */
-        .scale-control {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px 25px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #ffffff;
-        }
+        /* 缩放控制条样式见分组面板 */
 
         .scale-label {
             font-size: 14px;
@@ -157,19 +146,42 @@
         }
 
         /* 已应用的设计 Token 展示条 */
-        .tokens-bar {
+        /* 分组面板(颜色 / 尺寸) */
+        .panel-group {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
-            padding: 10px 16px;
+            padding: 12px 16px;
+            color: #ddd;
+            font-size: 12px;
+            max-width: 960px;
+        }
+        .panel-title {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            letter-spacing: 0.5px;
+        }
+        .panel-body {
             display: flex;
             align-items: center;
             flex-wrap: wrap;
             gap: 8px 14px;
-            color: #ddd;
-            font-size: 12px;
-            max-width: 960px;
+        }
+        .panel-color .panel-body { gap: 10px 18px; }
+
+        .scale-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 8px;
+            margin-bottom: 8px;
         }
 
         .token-chip {
@@ -1072,15 +1084,24 @@
     </style>
 </head>
 <body>
-    <!-- 缩放控制条 -->
-    <div class="scale-control">
-        <span class="scale-label">POS大小:</span>
-        <input type="range" class="scale-slider" id="scaleSlider" min="50" max="120" value="100" step="5">
-        <span class="scale-value" id="scaleValue">100%</span>
+    <!-- 颜色组 -->
+    <div class="panel-group panel-color">
+        <div class="panel-title">🎨 颜色</div>
+        <div class="panel-body" id="colorChips"></div>
     </div>
 
-    <!-- 已应用的设计 Token 展示条 -->
-    <div class="tokens-bar" id="tokensBar"></div>
+    <!-- 尺寸/布局组(含缩放滑块) -->
+    <div class="panel-group panel-size">
+        <div class="panel-title">📏 尺寸与布局</div>
+        <div class="panel-body">
+            <div class="scale-control">
+                <span class="scale-label">POS大小:</span>
+                <input type="range" class="scale-slider" id="scaleSlider" min="50" max="120" value="100" step="5">
+                <span class="scale-value" id="scaleValue">100%</span>
+            </div>
+            <div id="sizeChips"></div>
+        </div>
+    </div>
 
     <div class="pos-wrapper" id="posWrapper">
         <div class="pos-container" id="posContainer">
@@ -1218,7 +1239,8 @@
         const posWrapper = document.getElementById('posWrapper');
         const posContainer = document.getElementById('posContainer');
         const posScreen = document.getElementById('posScreen');
-        const tokensBar = document.getElementById('tokensBar');
+        const colorChips = document.getElementById('colorChips');
+        const sizeChips = document.getElementById('sizeChips');
 
         // 当前设计配置(用于 Token 展示条)
         const designConfig = {
@@ -1827,25 +1849,33 @@
                 ['text', '--pos-text', '文字色'],
                 ['bg', '--pos-bg', '屏幕'],
                 ['body', '--pos-body', '机身'],
+                ['label', '--pos-label', '标签色'],
+                ['status', '--pos-status', '状态色'],
+                ['success', '--pos-success', '成功色'],
+                ['keyBg', '--pos-key-bg', '按键底'],
+                ['keyText', '--pos-key-text', '按键字'],
+                ['brand', '--pos-brand', '品牌色'],
             ];
-            const chips = roles.map(([key, prop, label]) => {
+            const colorHtml = roles.map(([key, prop, label]) => {
                 const val = rootCS.getPropertyValue(prop).trim();
                 return `<span class="token-chip"><i style="background:${val}"></i><b>${label}</b>${val}</span>`;
-            }).join('');
+            }).join('') +
+                `<span class="token-chip"><i style="background:${palette.menuColor || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>三横杆</b>${palette.menuColor || '跟主色'}</span>` +
+                `<span class="token-chip"><i style="background:${palette.btnIcon || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>`;
+            colorChips.innerHTML = colorHtml;
 
             const pageLabels = { amount: '输入金额', menu: '主菜单', order: '交易记录', success: '收款成功', settings: '设置' };
-            tokensBar.innerHTML = chips +
-                `<span class="token-chip"><b>尺寸</b>${cs.width || 'auto'}</span>` +
-                `<span class="token-chip"><b>菜单</b>${root.style.getPropertyValue('--pos-menu-size') || '28px'}</span>` +
+            const sizeHtml =
+                `<span class="token-chip"><b>屏幕宽</b>${cs.width || 'auto'}</span>` +
+                `<span class="token-chip"><b>菜单大小</b>${root.style.getPropertyValue('--pos-menu-size') || '28px'}</span>` +
                 `<span class="token-chip"><b>图标</b>${designConfig.iconStyle}</span>` +
                 `<span class="token-chip"><b>按钮</b>${designConfig.btns === 'stack' ? '竖排' : '并排'}</span>` +
                 `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
                 `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
                 `<span class="token-chip"><b>提示语</b>${amountLabel}</span>` +
-                `<span class="token-chip"><b>三横杆</b>${palette.menuColor || '跟主色'}</span>` +
-                `<span class="token-chip"><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
                 `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
+            sizeChips.innerHTML = sizeHtml;
         }
 
         let root = document.documentElement;
