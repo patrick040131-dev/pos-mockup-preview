@@ -621,6 +621,25 @@
             gap: 16px;
             margin: 24px 0;
         }
+        /* 菜单轮播(左右滑动换页) */
+        .menu-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 0;
+            margin: 24px 0;
+            scrollbar-width: none;
+        }
+        .menu-carousel::-webkit-scrollbar { display: none; }
+        .menu-slide {
+            flex: 0 0 100%;
+            scroll-snap-align: start;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        .menu-slide.cols3 { grid-template-columns: repeat(3, 1fr); }
+        .page-dots .dot { cursor: pointer; }
         .menu-item {
             display: flex;
             flex-direction: column;
@@ -1073,7 +1092,17 @@
                 font-size: 22px;
             }
 
-            .scale-control {
+        .panel-size .token-chip {
+            padding: 4px 10px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+        }
+        .panel-size .scale-control {
+            margin-bottom: 10px;
+        }
+
+        .scale-control {
                 flex-direction: column;
             }
 
@@ -1233,6 +1262,8 @@
         let shownAmount = '0.00';
         let currentPage = 'amount';
         let amountLabel = '请输入金额';
+        let menuColors = [];
+        let menuFont = 16;
 
         const scaleSlider = document.getElementById('scaleSlider');
         const scaleValue = document.getElementById('scaleValue');
@@ -1291,17 +1322,37 @@
             `;
         }
 
+        function menuBtn(label, icon, target, idx) {
+            const color = menuColors[idx] || '#4285f4';
+            const glow = rgbaStr(hexToRgb(color), 0.30);
+            const click = target ? `renderPage('${target}')` : `showMessage('${label}')`;
+            return `<div class="menu-item" onclick="${click}"><div class="menu-item-icon" style="background:${color};box-shadow:0 2px 8px ${glow}">${icon}</div><span style="font-size:${menuFont}px">${label}</span></div>`;
+        }
+
         function pageTplMenu() {
             return `
                 <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="page-title">主菜单</div>
-                <div class="menu-grid">
-                    <div class="menu-item" onclick="renderPage('amount')"><div class="menu-item-icon">¥</div><span>收款</span></div>
-                    <div class="menu-item secondary" onclick="renderPage('amount')"><div class="menu-item-icon">支</div><span>分期</span></div>
-                    <div class="menu-item" onclick="renderPage('order')"><div class="menu-item-icon">查</div><span>查询</span></div>
-                    <div class="menu-item" onclick="renderPage('settings')"><div class="menu-item-icon">设</div><span>设置</span></div>
+                <div class="menu-carousel" id="menuCarousel">
+                    <div class="menu-slide">
+                        ${menuBtn('收款', '¥', 'amount', 0)}
+                        ${menuBtn('分期', '支', 'amount', 1)}
+                        ${menuBtn('查询', '查', 'order', 2)}
+                        ${menuBtn('设置', '⚙', 'settings', 3)}
+                    </div>
+                    <div class="menu-slide cols3">
+                        ${menuBtn('预授权', '🔐', '', 4)}
+                        ${menuBtn('担保交易', '🛡️', '', 5)}
+                        ${menuBtn('账本', '📒', '', 6)}
+                        ${menuBtn('管理', '🛠️', 'settings', 7)}
+                        ${menuBtn('撤销/退货', '↩️', '', 8)}
+                        ${menuBtn('更多', '⋯', '', 9)}
+                    </div>
                 </div>
-                <div class="page-dots"><div class="dot"></div><div class="dot active"></div></div>
+                <div class="page-dots" id="menuDots">
+                    <div class="dot active" onclick="swipeMenu(0)"></div>
+                    <div class="dot" onclick="swipeMenu(1)"></div>
+                </div>
             `;
         }
 
@@ -1359,6 +1410,22 @@
             el.innerHTML = tpls[name]();
             const d = getAmountEl();
             if (d) d.textContent = shownAmount;
+            if (name === 'menu') initMenuCarousel();
+        }
+
+        // 菜单轮播(滑动换页 + 圆点联动)
+        function initMenuCarousel() {
+            const c = document.getElementById('menuCarousel');
+            if (!c) return;
+            c.addEventListener('scroll', () => {
+                const idx = Math.round(c.scrollLeft / c.clientWidth);
+                const dots = document.getElementById('menuDots');
+                if (dots) dots.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+            });
+        }
+        function swipeMenu(idx) {
+            const c = document.getElementById('menuCarousel');
+            if (c) c.scrollTo({ left: idx * c.clientWidth, behavior: 'smooth' });
         }
 
         // ============================================================
@@ -1754,6 +1821,13 @@
                 const ms = parseInt(menuSize, 10);
                 if (ms >= 16 && ms <= 80) root.style.setProperty('--pos-menu-size', ms + 'px');
             }
+            // 菜单按钮独立配色(逗号分隔HEX,顺序对应:收款/分期/查询/设置/预授权/担保交易/账本/管理/撤销退货/更多)
+            const mc = params.get('menuColors');
+            if (mc) {
+                menuColors = mc.split(',').map(h => /^[0-9a-fA-F]{6}$/.test(h) ? '#' + h.toLowerCase() : '').filter(Boolean);
+            }
+            const mf = params.get('menuFont');
+            if (mf && /^\d{1,2}$/.test(mf)) menuFont = Math.min(32, Math.max(10, parseInt(mf, 10)));
             const amountPos = params.get('amountPos') || params.get('iconPos');
             if (amountPos && ['left', 'center', 'right'].includes(amountPos)) {
                 designConfig.amountPos = amountPos;
@@ -1861,7 +1935,8 @@
                 return `<span class="token-chip"><i style="background:${val}"></i><b>${label}</b>${val}</span>`;
             }).join('') +
                 `<span class="token-chip"><i style="background:${palette.menuColor || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>三横杆</b>${palette.menuColor || '跟主色'}</span>` +
-                `<span class="token-chip"><i style="background:${palette.btnIcon || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>`;
+                `<span class="token-chip"><i style="background:${palette.btnIcon || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>` +
+                (menuColors.length ? menuColors.map((c, i) => `<span class="token-chip"><i style="background:${c}"></i><b>菜单键${i + 1}</b>${c}</span>`).join('') : '');
             colorChips.innerHTML = colorHtml;
 
             const pageLabels = { amount: '输入金额', menu: '主菜单', order: '交易记录', success: '收款成功', settings: '设置' };
@@ -1873,6 +1948,7 @@
                 `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
                 `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
                 `<span class="token-chip"><b>提示语</b>${amountLabel}</span>` +
+                `<span class="token-chip"><b>菜单字号</b>${menuFont}px</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
                 `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
             sizeChips.innerHTML = sizeHtml;
