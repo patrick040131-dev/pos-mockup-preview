@@ -205,7 +205,6 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             width: var(--pos-width);
             position: relative;
-            overflow: hidden;
         }
 
         /* 屏幕大小预设(像素定位) */
@@ -230,6 +229,7 @@
             margin-bottom: 30px;
             min-height: 420px;
             position: relative;
+            overflow: hidden;
         }
 
         /* 状态栏 */
@@ -1088,7 +1088,7 @@
             <div class="camera"></div>
 
             <!-- 屏幕区域 -->
-            <div class="screen">
+            <div class="screen" id="posScreen">
                 <!-- 状态栏 -->
                 <div class="status-bar">
                     <div class="brand-area">
@@ -1217,6 +1217,7 @@
         const scaleValue = document.getElementById('scaleValue');
         const posWrapper = document.getElementById('posWrapper');
         const posContainer = document.getElementById('posContainer');
+        const posScreen = document.getElementById('posScreen');
         const tokensBar = document.getElementById('tokensBar');
 
         // 当前设计配置(用于 Token 展示条)
@@ -1413,8 +1414,8 @@
                 dr.appendChild(it);
             });
 
-            posContainer.appendChild(ov);
-            posContainer.appendChild(dr);
+            posScreen.appendChild(ov);
+            posScreen.appendChild(dr);
             requestAnimationFrame(() => { ov.classList.add('open'); dr.classList.add('open'); });
             _portDrawer = { ov, dr };
         }
