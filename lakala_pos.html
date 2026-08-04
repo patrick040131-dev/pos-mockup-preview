@@ -653,6 +653,52 @@
             transition: all 0.2s;
         }
 
+        /* 第二页大按键(3列×2行,圆弧,左图标右字) */
+        .func-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--pos-gap);
+            margin: 10px 0;
+        }
+        .func-btn {
+            background: #232830;
+            border: 2px solid #3c4655;
+            border-radius: var(--pos-radius-btn);
+            padding: 14px 12px;
+            min-height: var(--pos-btn-h);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .func-btn:hover {
+            background: #2d3542;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .func-btn:active { transform: translateY(0); }
+        .func-btn .func-ico {
+            width: var(--pos-func-ico-size, 42px);
+            height: var(--pos-func-ico-size, 42px);
+            border-radius: var(--pos-radius-icon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: calc(var(--pos-func-ico-size, 42px) * 0.5);
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        .func-btn .func-label {
+            color: var(--pos-func-text, #dcdce1);
+            font-size: var(--pos-func-font, 16px);
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
         /* 菜单轮播(transform 翻页,鼠标点圆点/箭头切换,流畅) */
         .menu-carousel {
             overflow: hidden;
@@ -1322,6 +1368,8 @@
         let amountLabel = '请输入金额';
         let menuColors = [];
         let menuFont = 16;
+        let funcIconColors = [];
+        let funcTextColors = [];
 
         const scaleSlider = document.getElementById('scaleSlider');
         const scaleValue = document.getElementById('scaleValue');
@@ -1381,13 +1429,13 @@
                             </div>
                         </div>
                         <div class="swipe-page">
-                            <div class="menu-grid">
-                                ${menuBtn('预授权', '🔐', '', 4)}
-                                ${menuBtn('担保交易', '🛡️', '', 5)}
-                                ${menuBtn('账本', '📒', '', 6)}
-                                ${menuBtn('管理', '🛠️', 'settings', 7)}
-                                ${menuBtn('撤销/退货', '↩️', '', 8)}
-                                ${menuBtn('更多', '⋯', '', 9)}
+                            <div class="func-grid">
+                                ${funcBtn('预授权', '🔐', 4)}
+                                ${funcBtn('担保交易', '🛡️', 5)}
+                                ${funcBtn('账本', '📒', 6)}
+                                ${funcBtn('管理', '🛠️', 7)}
+                                ${funcBtn('撤销/退货', '↩️', 8)}
+                                ${funcBtn('更多', '⋯', 9)}
                             </div>
                         </div>
                     </div>
@@ -1404,6 +1452,16 @@
             const glow = rgbaStr(hexToRgb(color), 0.30);
             const click = target ? `renderPage('${target}')` : `showMessage('${label}')`;
             return `<div class="menu-item" onclick="${click}"><div class="menu-item-icon" style="background:${color};box-shadow:0 2px 8px ${glow}">${icon}</div><span style="font-size:${menuFont}px">${label}</span></div>`;
+        }
+
+        function funcBtn(label, icon, idx) {
+            const i = idx - 4;
+            const color = menuColors[idx] || '#4285f4';
+            const glow = rgbaStr(hexToRgb(color), 0.30);
+            const icoColor = funcIconColors[i] || '#ffffff';
+            const txtColor = funcTextColors[i] || '';
+            const txtStyle = txtColor ? `style="color:${txtColor}"` : '';
+            return `<div class="func-btn" onclick="showMessage('${label}')"><div class="func-ico" style="background:${color};color:${icoColor};box-shadow:0 2px 8px ${glow}">${icon}</div><span class="func-label" ${txtStyle}>${label}</span></div>`;
         }
 
         function pageTplMenu() {
@@ -1965,6 +2023,15 @@
             }
             const mf = params.get('menuFont');
             if (mf && /^\d{1,2}$/.test(mf)) menuFont = Math.min(32, Math.max(10, parseInt(mf, 10)));
+            // 第二页大按键:图标色/字色(逗号分隔HEX,顺序同6键)
+            const fic = params.get('funcIconColors');
+            if (fic) funcIconColors = fic.split(',').map(h => /^[0-9a-fA-F]{6}$/.test(h) ? '#' + h.toLowerCase() : '').filter(Boolean);
+            const ftc = params.get('funcTextColors');
+            if (ftc) funcTextColors = ftc.split(',').map(h => /^[0-9a-fA-F]{6}$/.test(h) ? '#' + h.toLowerCase() : '').filter(Boolean);
+            const fis = params.get('funcIcoSize');
+            if (fis && /^\d{2,3}$/.test(fis)) root.style.setProperty('--pos-func-ico-size', parseInt(fis, 10) + 'px');
+            const ff = params.get('funcFont');
+            if (ff && /^\d{1,2}$/.test(ff)) root.style.setProperty('--pos-func-font', parseInt(ff, 10) + 'px');
             const amountPos = params.get('amountPos') || params.get('iconPos');
             if (amountPos && ['left', 'center', 'right'].includes(amountPos)) {
                 designConfig.amountPos = amountPos;
@@ -2073,7 +2140,9 @@
             }).join('') +
                 `<span class="token-chip"><i style="background:${palette.menuColor || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>三横杆</b>${palette.menuColor || '跟主色'}</span>` +
                 `<span class="token-chip"><i style="background:${palette.btnIcon || rootCS.getPropertyValue('--pos-primary').trim()}"></i><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>` +
-                (menuColors.length ? menuColors.map((c, i) => `<span class="token-chip"><i style="background:${c}"></i><b>菜单键${i + 1}</b>${c}</span>`).join('') : '');
+                (menuColors.length ? menuColors.map((c, i) => `<span class="token-chip"><i style="background:${c}"></i><b>菜单键${i + 1}</b>${c}</span>`).join('') : '') +
+                (funcIconColors.length ? funcIconColors.map((c, i) => `<span class="token-chip"><i style="background:${c}"></i><b>第二页图标${i + 1}</b>${c}</span>`).join('') : '') +
+                (funcTextColors.length ? funcTextColors.map((c, i) => `<span class="token-chip"><i style="background:${c}"></i><b>第二页字色${i + 1}</b>${c}</span>`).join('') : '');
             colorChips.innerHTML = colorHtml;
 
             const pageLabels = { amount: '输入金额', menu: '主菜单', order: '交易记录', success: '收款成功', settings: '设置' };
@@ -2086,6 +2155,8 @@
                 `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
                 `<span class="token-chip"><b>提示语</b>${amountLabel}</span>` +
                 `<span class="token-chip"><b>菜单字号</b>${menuFont}px</span>` +
+                `<span class="token-chip"><b>第二页图标大小</b>${root.style.getPropertyValue('--pos-func-ico-size') || '42px'}</span>` +
+                `<span class="token-chip"><b>第二页字号</b>${root.style.getPropertyValue('--pos-func-font') || '16px'}</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
                 `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
             sizeChips.innerHTML = sizeHtml;
