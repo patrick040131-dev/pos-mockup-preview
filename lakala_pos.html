@@ -621,6 +621,38 @@
             gap: 16px;
             margin: 24px 0;
         }
+        /* 屏幕内滑动翻页(鼠标/触摸拖拽) */
+        .swipe-wrap {
+            overflow: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: grab;
+        }
+        .swipe-wrap:active { cursor: grabbing; }
+        .swipe-track {
+            display: flex;
+            transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+            will-change: transform;
+        }
+        .swipe-track.dragging {
+            transition: none;
+        }
+        .swipe-page {
+            flex: 0 0 100%;
+            min-width: 100%;
+        }
+        .swipe-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 14px 0 4px;
+        }
+        .swipe-dots .dot {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
         /* 菜单轮播(transform 翻页,鼠标点圆点/箭头切换,流畅) */
         .menu-carousel {
             overflow: hidden;
@@ -1336,15 +1368,34 @@
         function pageTplAmount() {
             return `
                 <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
-                <div class="amount-area">
-                    <div class="input-label">${amountLabel}</div>
-                    <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
+                <div class="swipe-wrap" id="swipeWrap">
+                    <div class="swipe-track" id="swipeTrack">
+                        <div class="swipe-page">
+                            <div class="amount-area">
+                                <div class="input-label">${amountLabel}</div>
+                                <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
+                            </div>
+                            <div class="action-buttons">
+                                <div class="action-btn" onclick="handleCollect()"><div class="btn-icon orange">¥</div><div class="btn-text">收款</div></div>
+                                <div class="action-btn" onclick="handleInstallment()"><div class="btn-icon blue">支</div><div class="btn-text">支付宝分期</div></div>
+                            </div>
+                        </div>
+                        <div class="swipe-page">
+                            <div class="menu-grid">
+                                ${menuBtn('预授权', '🔐', '', 4)}
+                                ${menuBtn('担保交易', '🛡️', '', 5)}
+                                ${menuBtn('账本', '📒', '', 6)}
+                                ${menuBtn('管理', '🛠️', 'settings', 7)}
+                                ${menuBtn('撤销/退货', '↩️', '', 8)}
+                                ${menuBtn('更多', '⋯', '', 9)}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="action-buttons">
-                    <div class="action-btn" onclick="handleCollect()"><div class="btn-icon orange">¥</div><div class="btn-text">收款</div></div>
-                    <div class="action-btn" onclick="handleInstallment()"><div class="btn-icon blue">支</div><div class="btn-text">支付宝分期</div></div>
+                <div class="swipe-dots" id="swipeDots">
+                    <div class="dot active"></div>
+                    <div class="dot"></div>
                 </div>
-                <div class="page-dots"><div class="dot active"></div><div class="dot"></div></div>
             `;
         }
 
@@ -1439,7 +1490,55 @@
             el.innerHTML = tpls[name]();
             const d = getAmountEl();
             if (d) d.textContent = shownAmount;
+            if (name === 'amount') initSwipe();
             if (name === 'menu') initMenuCarousel();
+        }
+
+        // 屏幕内滑动翻页(鼠标按住拖拽 / 触摸 / 点圆点)
+        let swipeIdx = 0;
+        const SWIPE_COUNT = 2;
+        function initSwipe() {
+            swipeIdx = 0;
+            const track = document.getElementById('swipeTrack');
+            const wrap = document.getElementById('swipeWrap');
+            const dots = document.getElementById('swipeDots');
+            if (!track || !wrap) return;
+            if (dots) dots.querySelectorAll('.dot').forEach((d, i) => {
+                d.onclick = () => { swipeIdx = i; updateSwipe(); };
+            });
+            let startX = 0, curX = 0, dragging = false, width = 0;
+            const down = (x) => { dragging = true; startX = x; curX = x; width = wrap.clientWidth; track.classList.add('dragging'); };
+            const move = (x) => {
+                if (!dragging) return;
+                curX = x;
+                const delta = x - startX;
+                let offset = -swipeIdx * width + delta;
+                offset = Math.max(-(SWIPE_COUNT - 1) * width, Math.min(0, offset));
+                track.style.transform = `translateX(${offset}px)`;
+            };
+            const up = () => {
+                if (!dragging) return;
+                dragging = false;
+                track.classList.remove('dragging');
+                const delta = curX - startX;
+                if (Math.abs(delta) > width * 0.18) {
+                    swipeIdx = Math.max(0, Math.min(SWIPE_COUNT - 1, swipeIdx + (delta < 0 ? 1 : -1)));
+                }
+                updateSwipe();
+            };
+            wrap.addEventListener('mousedown', (e) => down(e.clientX));
+            window.addEventListener('mousemove', (e) => move(e.clientX));
+            window.addEventListener('mouseup', up);
+            wrap.addEventListener('touchstart', (e) => down(e.touches[0].clientX), { passive: true });
+            wrap.addEventListener('touchmove', (e) => move(e.touches[0].clientX), { passive: true });
+            wrap.addEventListener('touchend', up);
+            updateSwipe();
+        }
+        function updateSwipe() {
+            const track = document.getElementById('swipeTrack');
+            if (track) track.style.transform = `translateX(-${swipeIdx * 100}%)`;
+            const dots = document.getElementById('swipeDots');
+            if (dots) dots.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === swipeIdx));
         }
 
         let menuPageIdx = 0;
