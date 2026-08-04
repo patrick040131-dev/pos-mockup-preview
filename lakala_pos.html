@@ -1569,9 +1569,9 @@
             if (font && /^\d{2,3}$/.test(font)) applyFont(font);
             const labelSize = params.get('labelSize');
             if (labelSize && /^\d{2}$/.test(labelSize)) applyLabelFont(labelSize);
-            const label = params.get('label');
-            if (label !== null) {
-                try { amountLabel = decodeURIComponent(label); } catch (e) { amountLabel = label; }
+            const labelText = params.get('labelText');
+            if (labelText !== null) {
+                try { amountLabel = decodeURIComponent(labelText); } catch (e) { amountLabel = labelText; }
             }
 
             // 3. 菜单布局
