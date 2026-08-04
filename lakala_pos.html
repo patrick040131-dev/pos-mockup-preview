@@ -407,12 +407,13 @@
             display: flex;
         }
 
-        /* 汉堡菜单(固定在品牌logo正下方,左侧;大小可调) */
+        /* 汉堡菜单(固定在品牌logo正下方,左侧;大小可调;可点击打开便携菜单) */
         .menu-icon {
             width: var(--pos-menu-size);
             margin-bottom: 4px;
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
 
         .menu-icon div {
@@ -964,6 +965,79 @@
             100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
+        /* 便携菜单抽屉(从左侧滑出) */
+        .pos-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1999;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .pos-drawer-overlay.open { opacity: 1; }
+        .pos-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 260px;
+            max-width: 80vw;
+            background: rgba(20,22,26,0.92);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            z-index: 2000;
+            transform: translateX(-100%);
+            transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            padding: 22px 0 16px;
+            border-radius: 0 var(--pos-radius-screen) var(--pos-radius-screen) 0;
+        }
+        .pos-drawer.open { transform: translateX(0); }
+        .drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+            margin-bottom: 8px;
+        }
+        .drawer-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--pos-brand);
+        }
+        .drawer-close {
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 4px 8px;
+        }
+        .drawer-close:hover { opacity: 1; }
+        .drawer-item {
+            padding: 16px 22px;
+            font-size: 17px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            transition: background 0.15s, padding-left 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .drawer-item::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--pos-brand);
+            opacity: 0.7;
+        }
+        .drawer-item:hover {
+            background: rgba(255,255,255,0.08);
+            padding-left: 28px;
+        }
+
         /* 响应式 */
         @media (max-width: 650px) {
             .pos-container {
@@ -1177,7 +1251,7 @@
         // ============================================================
         function pageTplAmount() {
             return `
-                <div class="menu-icon"><div></div><div></div><div></div></div>
+                <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="amount-area">
                     <div class="input-label">${amountLabel}</div>
                     <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
@@ -1192,7 +1266,7 @@
 
         function pageTplMenu() {
             return `
-                <div class="menu-icon"><div></div><div></div><div></div></div>
+                <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="page-title">主菜单</div>
                 <div class="menu-grid">
                     <div class="menu-item" onclick="renderPage('amount')"><div class="menu-item-icon">¥</div><span>收款</span></div>
@@ -1304,6 +1378,56 @@
             t.textContent = msg;
             document.body.appendChild(t);
             setTimeout(() => t.remove(), 1500);
+        }
+
+        // ============================================================
+        // 便携菜单(三横杆点击,左侧滑出)
+        // ============================================================
+        const PORTABLE_MENU_ITEMS = ['抖音核销券', '美团核销券', '淘宝闪购核销券', '核销记录'];
+        let _portDrawer = null;
+
+        function openPortableMenu() {
+            playSound();
+            if (_portDrawer) return;
+            const ov = document.createElement('div');
+            ov.className = 'pos-drawer-overlay';
+            ov.addEventListener('click', closePortableMenu);
+
+            const dr = document.createElement('div');
+            dr.className = 'pos-drawer';
+            const head = document.createElement('div');
+            head.className = 'drawer-head';
+            head.innerHTML = '<span class="drawer-title">便携菜单</span><span class="drawer-close">✕</span>';
+            head.querySelector('.drawer-close').addEventListener('click', closePortableMenu);
+
+            dr.appendChild(head);
+            PORTABLE_MENU_ITEMS.forEach((name) => {
+                const it = document.createElement('div');
+                it.className = 'drawer-item';
+                it.textContent = name;
+                it.addEventListener('click', () => handlePortableMenu(name));
+                dr.appendChild(it);
+            });
+
+            document.body.appendChild(ov);
+            document.body.appendChild(dr);
+            requestAnimationFrame(() => { ov.classList.add('open'); dr.classList.add('open'); });
+            _portDrawer = { ov, dr };
+        }
+
+        function closePortableMenu() {
+            if (!_portDrawer) return;
+            const { ov, dr } = _portDrawer;
+            ov.classList.remove('open');
+            dr.classList.remove('open');
+            const ref = _portDrawer;
+            _portDrawer = null;
+            setTimeout(() => { ov.remove(); dr.remove(); }, 280);
+        }
+
+        function handlePortableMenu(name) {
+            closePortableMenu();
+            setTimeout(() => showMessage(name), 240);
         }
 
         // ============================================================
