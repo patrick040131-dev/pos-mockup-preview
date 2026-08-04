@@ -50,6 +50,11 @@
             --pos-symbol-font: 56px;   /* ¥符号字号 */
             --pos-label-font: 22px;    /* "请输入金额"提示文字字号 */
             --pos-menu-size: 28px;     /* 顶部三横杆菜单图标大小 */
+            --pos-menu-color: var(--pos-primary);      /* 三横杆颜色(独立,默认跟主色) */
+            --pos-menu-glow: var(--pos-primary-line);  /* 三横杆发光 */
+            --pos-btn-icon: var(--pos-primary);        /* 支付宝分期按钮图标背景色(独立,默认跟主色) */
+            --pos-btn-icon-to: var(--pos-primary-to);  /* 渐变端 */
+            --pos-btn-icon-faint: var(--pos-primary-faint); /* 阴影 */
 
             /* 弧度 */
             --pos-radius: 16px;
@@ -412,10 +417,10 @@
 
         .menu-icon div {
             height: 3px;
-            background: var(--pos-primary);
+            background: var(--pos-menu-color);
             margin: 7px 0;
             border-radius: 2px;
-            box-shadow: 0 0 6px var(--pos-primary-line);
+            box-shadow: 0 0 6px var(--pos-menu-glow);
         }
 
         /* 菜单位置:固定在品牌logo正下方(左侧),不可移动 */
@@ -513,8 +518,8 @@
         }
 
         .btn-icon.blue {
-            background: linear-gradient(135deg, var(--pos-primary) 0%, var(--pos-primary-to) 100%);
-            box-shadow: 0 2px 8px var(--pos-primary-faint);
+            background: linear-gradient(135deg, var(--pos-btn-icon) 0%, var(--pos-btn-icon-to) 100%);
+            box-shadow: 0 2px 8px var(--pos-btn-icon-faint);
         }
 
         .btn-text {
@@ -533,8 +538,8 @@
         .pos-container[data-iconstyle="line"] .btn-icon {
             background: transparent !important;
             box-shadow: none;
-            border: 2px solid var(--pos-primary);
-            color: var(--pos-primary);
+            border: 2px solid var(--pos-btn-icon);
+            color: var(--pos-btn-icon);
         }
         .pos-container[data-iconstyle="line"] .btn-icon.orange {
             border-color: var(--pos-secondary);
@@ -1495,17 +1500,33 @@
             root.style.setProperty('--pos-row-bg', rgbaStr(T, 0.06));
             root.style.setProperty('--pos-row-border', rgbaStr(T, 0.15));
             root.style.setProperty('--pos-key-sub', toHex(mixColors(KT, KB, 0.55)));
+
+            // 三横杆菜单色(独立,默认跟主色)
+            if (pal.menuColor) {
+                const M = hexToRgb(pal.menuColor);
+                root.style.setProperty('--pos-menu-color', pal.menuColor);
+                root.style.setProperty('--pos-menu-glow', rgbaStr(M, 0.40));
+            }
+            // 支付宝分期按钮图标色(独立,默认跟主色)
+            if (pal.btnIcon) {
+                const BI = hexToRgb(pal.btnIcon);
+                root.style.setProperty('--pos-btn-icon', pal.btnIcon);
+                root.style.setProperty('--pos-btn-icon-to', toHex(darken(BI, 0.72)));
+                root.style.setProperty('--pos-btn-icon-faint', rgbaStr(BI, 0.30));
+            }
         }
+
+        let palette = {
+            primary: '#4285f4', secondary: '#e68232', accent: '#ffc800',
+            text: '#ffffff', bg: '#121419', body: '#eeede9', label: '#4285f4',
+            status: '#828791', keyBg: '#f7f6f3', keyText: '#373737',
+            keyBorder: '#ceccc6', success: '#3fa876', brand: '#4285f4',
+            menuColor: '', btnIcon: ''
+        };
 
         function applyUrlParams() {
             const params = new URLSearchParams(window.location.search);
             root = document.documentElement;
-            const palette = {
-                primary: '#4285f4', secondary: '#e68232', accent: '#ffc800',
-                text: '#ffffff', bg: '#121419', body: '#eeede9', label: '#4285f4',
-                status: '#828791', keyBg: '#f7f6f3', keyText: '#373737',
-                keyBorder: '#ceccc6', success: '#3fa876', brand: '#4285f4'
-            };
 
             function setColor(name, prop) {
                 const v = params.get(name);
@@ -1529,6 +1550,8 @@
             setColor('keyBorder', '--pos-key-border');
             setColor('success', '--pos-success');
             setColor('brand', '--pos-brand');
+            setColor('menuColor', '--pos-menu-color');
+            setColor('btnIcon', '--pos-btn-icon');
             computeShades(palette);
 
             // 品牌名
@@ -1691,6 +1714,8 @@
                 `<span class="token-chip"><b>页面</b>${pageLabels[designConfig.page] || designConfig.page}</span>` +
                 `<span class="token-chip"><b>选中</b>${designConfig.active}</span>` +
                 `<span class="token-chip"><b>提示语</b>${amountLabel}</span>` +
+                `<span class="token-chip"><b>三横杆</b>${palette.menuColor || '跟主色'}</span>` +
+                `<span class="token-chip"><b>分期图标</b>${palette.btnIcon || '跟主色'}</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
                 `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
         }
