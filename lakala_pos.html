@@ -1453,7 +1453,7 @@
 
         // 可位置微调的元素key清单(pos=key:dx:dy 中的key必须在此列表内)
         const POS_OFFSET_KEYS = [
-            'logo', 'statusBar', 'exitBtn', 'watermark', 'hamburger',
+            'logo', 'statusBar', 'exitBtn', 'watermark', 'portableMenu1', 'portableMenu2',
             'amountLabel', 'currencySymbol', 'amountValue',
             'collectIcon', 'collectText', 'installIcon', 'installText',
             ...[1, 2, 3, 4, 5, 6].flatMap(n => [`func${n}Icon`, `func${n}Text`]),
@@ -1524,7 +1524,7 @@
         // ============================================================
         function pageTplAmount() {
             return `
-                <div class="menu-icon" data-pk="hamburger" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
+                <div class="menu-icon" data-pk="portableMenu1" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="swipe-wrap" id="swipeWrap">
                     <div class="swipe-track" id="swipeTrack">
                         <div class="swipe-page">
@@ -1583,7 +1583,7 @@
 
         function pageTplMenu() {
             return `
-                <div class="menu-icon" data-pk="hamburger" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
+                <div class="menu-icon" data-pk="portableMenu2" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="page-title">主菜单</div>
                 <div class="menu-carousel">
                     <div class="menu-track" id="menuTrack">
@@ -1804,9 +1804,10 @@
             },
             {
                 name: '美团核销券',
-                bg: '#ffd400',
+                bg: '#ffd100',
+                shape: 'square',
                 plain: false,
-                svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9.5c0-2.5 2.7-4.5 6-4.5s6 2 6 4.5c0 1.6-1.1 3-2.8 3.8.6.2 1.1.5 1.5.9.9.8 1.3 1.9 1.3 3.1H16c0-.8-.3-1.3-.7-1.7-.6-.5-1.6-.8-2.8-.8h-1v2.5H9.5v-2.5h-1c-1.2 0-2.2.3-2.8.8-.4.4-.7.9-.7 1.7H3c0-1.2.4-2.3 1.3-3.1.4-.4.9-.7 1.5-.9C4.1 12.5 3 11.1 3 9.5c0 0 0 0 0 0h3zm1.9-.3c0 1.5 1.8 2.8 4.1 2.8s4.1-1.3 4.1-2.8-1.8-2.8-4.1-2.8-4.1 1.3-4.1 2.8z" fill="#fff"/></svg>'
+                svg: '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9 8V6a3 3 0 0 1 6 0v2h2a1 1 0 0 1 1 1l-.9 10.1a2 2 0 0 1-2 1.9H8.9a2 2 0 0 1-2-1.9L6 9a1 1 0 0 1 1-1h2zm2 0h2V6a1 1 0 0 0-2 0v2z" fill="#1a1a1a"/></svg>'
             },
             {
                 name: '淘宝闪购核销券',
@@ -1845,6 +1846,7 @@
                 iconWrap.className = 'drawer-item-icon' + (item.plain ? ' plain' : '');
                 iconWrap.setAttribute('data-pk', 'drawer' + (di + 1) + 'Icon');
                 iconWrap.style.background = item.bg;
+                if (item.shape === 'square') iconWrap.style.borderRadius = '30%';
                 iconWrap.innerHTML = item.svg;
                 const label = document.createElement('span');
                 label.setAttribute('data-pk', 'drawer' + (di + 1) + 'Text');
