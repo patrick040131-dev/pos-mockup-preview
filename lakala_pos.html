@@ -815,6 +815,26 @@
             border: 1px solid var(--pos-row-border);
             border-radius: var(--pos-radius-key);
             padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .order-row.selected {
+            background: var(--pos-primary-faint, var(--pos-row-bg));
+            border-color: var(--pos-primary);
+        }
+        .pos-container[data-active="outline"] .order-row.selected {
+            background: var(--pos-row-bg);
+            border: 2px solid var(--pos-primary);
+            padding: 13px 15px;
+        }
+        .pos-container[data-active="glow"] .order-row.selected {
+            box-shadow: 0 0 0 1px var(--pos-primary), 0 0 14px var(--pos-primary-glow);
+        }
+        .pos-container[data-active="underline"] .order-row.selected {
+            background: var(--pos-row-bg);
+            border-color: var(--pos-row-border);
+            border-bottom: 3px solid var(--pos-primary);
+            padding-bottom: 12px;
         }
         .order-name {
             color: var(--pos-text);
@@ -880,6 +900,8 @@
             background: #3c414b;
             position: relative;
             flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         .toggle.on {
             background: var(--pos-primary);
@@ -897,6 +919,25 @@
         }
         .toggle.on::after {
             left: 23px;
+        }
+        /* 选中效果:开关 on 状态 */
+        .pos-container[data-active="outline"] .toggle.on {
+            background: transparent;
+            border: 2px solid var(--pos-primary);
+        }
+        .pos-container[data-active="outline"] .toggle.on::after {
+            background: var(--pos-primary);
+            left: 21px;
+        }
+        .pos-container[data-active="glow"] .toggle.on {
+            box-shadow: 0 0 10px var(--pos-primary-glow), 0 0 3px var(--pos-primary-glow);
+        }
+        .pos-container[data-active="underline"] .toggle.on {
+            background: #3c414b;
+        }
+        .pos-container[data-active="underline"] .toggle.on::after {
+            background: var(--pos-primary);
+            box-shadow: 0 2px 0 var(--pos-primary);
         }
 
         /* M7水印 */
@@ -1281,7 +1322,7 @@
             <div class="screen" id="posScreen">
                 <!-- 状态栏 -->
                 <div class="status-bar">
-                    <div class="brand-area">
+                    <div class="brand-area" data-pk="logo">
                         <div class="logo-box">
                             <svg class="logo-l" viewBox="0 0 20 22" width="19" height="21" aria-hidden="true">
                                 <path d="M3.5 2v14h13" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1290,7 +1331,7 @@
                         </div>
                         <div class="brand-name" id="brandName">拉卡拉</div>
                     </div>
-                    <div class="status-icons">
+                    <div class="status-icons" data-pk="statusBar">
                         <span>00:00</span>
                         <div class="wifi-icon">
                             <div class="wifi-dot"></div>
@@ -1309,7 +1350,7 @@
                             <div class="battery-tip"></div>
                             <span class="battery-percent">94</span>
                         </div>
-                        <div class="exit-btn" id="exitBtn" onclick="handleExit()">✕</div>
+                        <div class="exit-btn" id="exitBtn" data-pk="exitBtn" onclick="handleExit()">✕</div>
                     </div>
                 </div>
 
@@ -1317,7 +1358,7 @@
                 <div id="pageContent"></div>
 
                 <!-- M7水印 -->
-                <div class="watermark">M7</div>
+                <div class="watermark" data-pk="watermark">M7</div>
             </div>
 
             <!-- 实体按键区 -->
@@ -1408,6 +1449,26 @@
         let funcTextColors = [];
         let actionIconColors = [];
         let actionTextColors = [];
+        let posOffsets = {};
+
+        // 可位置微调的元素key清单(pos=key:dx:dy 中的key必须在此列表内)
+        const POS_OFFSET_KEYS = [
+            'logo', 'statusBar', 'exitBtn', 'watermark', 'hamburger',
+            'amountLabel', 'currencySymbol', 'amountValue',
+            'collectIcon', 'collectText', 'installIcon', 'installText',
+            ...[1, 2, 3, 4, 5, 6].flatMap(n => [`func${n}Icon`, `func${n}Text`]),
+            ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].flatMap(n => [`nav${n}Icon`, `nav${n}Text`]),
+            ...[1, 2, 3, 4].flatMap(n => [`drawer${n}Icon`, `drawer${n}Text`]),
+        ];
+
+        // 位置微调:key -> {dx, dy}px,对应 data-pk 属性
+        function applyPositionOffsets() {
+            document.querySelectorAll('[data-pk]').forEach(el => {
+                const pk = el.getAttribute('data-pk');
+                const off = posOffsets[pk];
+                el.style.transform = off ? `translate(${off.dx}px, ${off.dy}px)` : '';
+            });
+        }
 
         // 功能图标(线性/纯色 SVG,fill="currentColor" 会随 icoColor 变化,匹配实机截图样式)
         const ICONS = {
@@ -1463,17 +1524,17 @@
         // ============================================================
         function pageTplAmount() {
             return `
-                <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
+                <div class="menu-icon" data-pk="hamburger" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="swipe-wrap" id="swipeWrap">
                     <div class="swipe-track" id="swipeTrack">
                         <div class="swipe-page">
                             <div class="amount-area">
-                                <div class="input-label">${amountLabel}</div>
-                                <div class="amount-display"><span class="currency-symbol">¥</span><span class="amount-value" id="amountDisplay">${shownAmount}</span></div>
+                                <div class="input-label" data-pk="amountLabel">${amountLabel}</div>
+                                <div class="amount-display"><span class="currency-symbol" data-pk="currencySymbol">¥</span><span class="amount-value" id="amountDisplay" data-pk="amountValue">${shownAmount}</span></div>
                             </div>
                             <div class="action-buttons">
-                                ${actionBtn('收款', '¥', 'orange', 0, 'handleCollect()')}
-                                ${actionBtn('支付宝分期', '支', 'blue', 1, 'handleInstallment()')}
+                                ${actionBtn('收款', '¥', 'orange', 0, 'handleCollect()', 'collect')}
+                                ${actionBtn('支付宝分期', '支', 'blue', 1, 'handleInstallment()', 'install')}
                             </div>
                         </div>
                         <div class="swipe-page">
@@ -1495,32 +1556,34 @@
             `;
         }
 
-        function actionBtn(label, icon, colorClass, idx, onclick) {
+        function actionBtn(label, icon, colorClass, idx, onclick, pk) {
             const icoColor = actionIconColors[idx] || '';
             const txtColor = actionTextColors[idx] || '';
             const icoStyle = icoColor ? `style="background:${icoColor};box-shadow:0 2px 8px ${rgbaStr(hexToRgb(icoColor), 0.30)}"` : '';
             const txtStyle = txtColor ? `style="color:${txtColor}"` : '';
-            return `<div class="action-btn" onclick="${onclick}"><div class="btn-icon ${colorClass}" ${icoStyle}>${icon}</div><div class="btn-text" ${txtStyle}>${label}</div></div>`;
+            return `<div class="action-btn" onclick="${onclick}"><div class="btn-icon ${colorClass}" data-pk="${pk}Icon" ${icoStyle}>${icon}</div><div class="btn-text" data-pk="${pk}Text" ${txtStyle}>${label}</div></div>`;
         }
 
         function menuBtn(label, icon, target, idx) {
             const color = menuColors[idx] || '#4285f4';
             const glow = rgbaStr(hexToRgb(color), 0.30);
             const click = target ? `renderPage('${target}')` : `showMessage('${label}')`;
-            return `<div class="menu-item" onclick="${click}"><div class="menu-item-icon" style="background:${color};box-shadow:0 2px 8px ${glow}">${icon}</div><span style="font-size:${menuFont}px">${label}</span></div>`;
+            const n = idx + 1;
+            return `<div class="menu-item" onclick="${click}"><div class="menu-item-icon" data-pk="nav${n}Icon" style="background:${color};box-shadow:0 2px 8px ${glow}">${icon}</div><span data-pk="nav${n}Text" style="font-size:${menuFont}px">${label}</span></div>`;
         }
 
         function funcBtn(label, icon, idx) {
             const i = idx - 4;
+            const n = i + 1;
             const icoColor = funcIconColors[i] || '#ffffff';
             const txtColor = funcTextColors[i] || '';
             const txtStyle = txtColor ? `style="color:${txtColor}"` : '';
-            return `<div class="func-btn" onclick="showMessage('${label}')"><div class="func-ico" style="color:${icoColor}">${icon}</div><span class="func-label" ${txtStyle}>${label}</span></div>`;
+            return `<div class="func-btn" onclick="showMessage('${label}')"><div class="func-ico" data-pk="func${n}Icon" style="color:${icoColor}">${icon}</div><span class="func-label" data-pk="func${n}Text" ${txtStyle}>${label}</span></div>`;
         }
 
         function pageTplMenu() {
             return `
-                <div class="menu-icon" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
+                <div class="menu-icon" data-pk="hamburger" onclick="openPortableMenu()" title="便携菜单"><div></div><div></div><div></div></div>
                 <div class="page-title">主菜单</div>
                 <div class="menu-carousel">
                     <div class="menu-track" id="menuTrack">
@@ -1549,14 +1612,18 @@
         }
 
         function pageTplOrder() {
+            const rows = [
+                { name: '便利店', amt: '¥25.00' },
+                { name: '餐饮', amt: '¥68.50' },
+                { name: '超市', amt: '¥128.00' },
+                { name: '停车费', amt: '¥10.00' },
+            ];
+            const rowsHtml = rows.map((r, i) =>
+                `<div class="order-row${i === 0 ? ' selected' : ''}" onclick="toggleOrderSelect(this)"><span class="order-name">${r.name}</span><span class="order-amt">${r.amt}</span></div>`
+            ).join('');
             return `
                 <div class="page-title">交易记录</div>
-                <div class="order-list">
-                    <div class="order-row"><span class="order-name">便利店</span><span class="order-amt">¥25.00</span></div>
-                    <div class="order-row"><span class="order-name">餐饮</span><span class="order-amt">¥68.50</span></div>
-                    <div class="order-row"><span class="order-name">超市</span><span class="order-amt">¥128.00</span></div>
-                    <div class="order-row"><span class="order-name">停车费</span><span class="order-amt">¥10.00</span></div>
-                </div>
+                <div class="order-list">${rowsHtml}</div>
                 <div class="page-dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
             `;
         }
@@ -1579,8 +1646,9 @@
         function pageTplSettings() {
             return `
                 <div class="page-title">设置</div>
-                <div class="setting-row"><span>交易提示音</span><div class="toggle on"></div></div>
-                <div class="setting-row"><span>小票打印</span><div class="toggle on"></div></div>
+                <div class="setting-row"><span>交易提示音</span><div class="toggle on" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><span>小票打印</span><div class="toggle on" onclick="toggleSetting(this)"></div></div>
+                <div class="setting-row"><span>自动锁屏</span><div class="toggle" onclick="toggleSetting(this)"></div></div>
                 <div class="setting-row"><span>亮屏时长</span><span class="setting-val">30秒</span></div>
                 <div class="setting-row" style="cursor:pointer" onclick="handleExit()"><span>退出登录</span><span class="setting-val red">→</span></div>
                 <div class="page-dots"><div class="dot"></div><div class="dot"></div><div class="dot active"></div></div>
@@ -1604,6 +1672,7 @@
             if (d) d.textContent = shownAmount;
             if (name === 'amount') initSwipe();
             if (name === 'menu') initMenuCarousel();
+            applyPositionOffsets();
         }
 
         // 屏幕内滑动翻页(鼠标按住拖拽 / 触摸 / 点圆点)
@@ -1769,14 +1838,16 @@
             head.querySelector('.drawer-close').addEventListener('click', closePortableMenu);
 
             dr.appendChild(head);
-            PORTABLE_MENU_ITEMS.forEach((item) => {
+            PORTABLE_MENU_ITEMS.forEach((item, di) => {
                 const it = document.createElement('div');
                 it.className = 'drawer-item';
                 const iconWrap = document.createElement('span');
                 iconWrap.className = 'drawer-item-icon' + (item.plain ? ' plain' : '');
+                iconWrap.setAttribute('data-pk', 'drawer' + (di + 1) + 'Icon');
                 iconWrap.style.background = item.bg;
                 iconWrap.innerHTML = item.svg;
                 const label = document.createElement('span');
+                label.setAttribute('data-pk', 'drawer' + (di + 1) + 'Text');
                 label.textContent = item.name;
                 it.appendChild(iconWrap);
                 it.appendChild(label);
@@ -1788,6 +1859,7 @@
             posScreen.appendChild(dr);
             requestAnimationFrame(() => { ov.classList.add('open'); dr.classList.add('open'); });
             _portDrawer = { ov, dr };
+            applyPositionOffsets();
         }
 
         function closePortableMenu() {
@@ -1906,6 +1978,18 @@
                     { label: '退出', primary: true, onClick: () => renderPage('menu') },
                 ],
             });
+        }
+
+        // 选中效果:交易记录单选、设置开关
+        function toggleOrderSelect(el) {
+            playSound();
+            el.parentElement.querySelectorAll('.order-row').forEach(r => r.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function toggleSetting(el) {
+            playSound();
+            el.classList.toggle('on');
         }
 
         function handleShift() {
@@ -2205,8 +2289,21 @@
                 posContainer.setAttribute('data-btns', btns);
             }
 
+            // 位置微调:pos=key:dx:dy,key2:dx:dy(支持负数,单位px)
+            // 可用key见 POS_OFFSET_KEYS
+            const posParam = params.get('pos');
+            if (posParam) {
+                posParam.split(',').forEach(entry => {
+                    const m = entry.match(/^([a-zA-Z0-9]+):(-?\d{1,3}):(-?\d{1,3})$/);
+                    if (m && POS_OFFSET_KEYS.includes(m[1])) {
+                        posOffsets[m[1]] = { dx: parseInt(m[2], 10), dy: parseInt(m[3], 10) };
+                    }
+                });
+            }
+
             // 渲染初始页面
             renderPage(designConfig.page);
+            applyPositionOffsets();
         }
 
         // ============================================================
@@ -2257,7 +2354,8 @@
                 `<span class="token-chip"><b>第一页图标大小</b>${root.style.getPropertyValue('--pos-action-ico-size') || '42px'}</span>` +
                 `<span class="token-chip"><b>第一页字号</b>${root.style.getPropertyValue('--pos-action-font') || '26px'}</span>` +
                 `<span class="token-chip"><b>弧度</b>${designConfig.radiusLabel}</span>` +
-                `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>`;
+                `<span class="token-chip"><b>弹窗</b>${designConfig.popup}</span>` +
+                (Object.keys(posOffsets).length ? `<span class="token-chip"><b>位置微调</b>${Object.keys(posOffsets).length}项</span>` : '');
             sizeChips.innerHTML = sizeHtml;
         }
 
