@@ -6196,7 +6196,39 @@ render();
     render = function(){ _origRender.apply(this, arguments); applyPositionOffsets(); };
   }
 
-  function boot(){
+  // ---- 单独图标改色:scIconColors(快捷键) / menuIconColors(功能菜单,按展示顺序) ----
+  function parseColorList(s){
+    if (!s) return [];
+    return s.split(',').map(h=>h.trim()).filter(h=>/^[0-9a-fA-F]{6}$/.test(h)).map(h=>'#'+h.toLowerCase());
+  }
+  async function applyIconColorOverrides(params){
+    const scColors = parseColorList(params.get('scIconColors'));
+    const mColors  = parseColorList(params.get('menuIconColors'));
+    if (!scColors.length && !mColors.length) return false;
+    _cacheOriginals();
+    // 银色/商务金主题字形为深色,其余主题字形为白
+    const _glyph = (_themeId === 'silver' || _themeId === 'blackgold') ? '#000000' : undefined;
+    const jobs = [];
+    // 快捷键图标:第1个=收款(sc0),第2个=支付宝分期(sc1)
+    scColors.forEach((hex, i)=>{
+      if (i < SHORTCUTS.length) jobs.push(recolorIcon(_ICON_ORIG['sc'+i], hex, _glyph).then(r=>{ SHORTCUTS[i].icon = r; }));
+    });
+    // 功能菜单图标:按展示顺序(menuItem1~6)对应 MENU 下标 [0,1,4,5,2,3],
+    // 即 预授权/担保交易/管理/更多(左侧四项)+ 撤销退货/账本(右侧两项)
+    const DISPLAY2MENU = [0,1,4,5,2,3];
+    mColors.forEach((hex, i)=>{
+      const idx = DISPLAY2MENU[i];
+      if (idx === undefined) return;
+      const orig = _ICON_ORIG.mTheme.find(o=>o.i===idx);
+      const src = orig ? orig.src : (idx===2 ? _ICON_ORIG.mRefund : (idx===3 ? _ICON_ORIG.mLedger : null));
+      if (!src) return;
+      jobs.push(recolorIcon(src, hex, _glyph).then(r=>{ MENU[idx].ic = r; }));
+    });
+    if (jobs.length) await Promise.all(jobs);
+    return true;
+  }
+
+  async function boot(){
     // 0) 菜单页布局:menuLayout=split(默认,分栏) | grid6(经典六宫格,复用"更多"同款样式与图标)
     const menuLayout = params.get('menuLayout');
     if (menuLayout && ['split','grid6'].includes(menuLayout) && typeof MENU_LAYOUT !== 'undefined') {
@@ -6208,13 +6240,16 @@ render();
     let activeTheme = null;
     if (themeParam && typeof THEMES !== 'undefined' && THEMES.some(t=>t.id===themeParam)) {
       activeTheme = THEMES.find(t=>t.id===themeParam);
-      applyTheme(activeTheme, true);
+      await applyTheme(activeTheme, false);
     } else if (hasColorParams) {
       activeTheme = buildThemeFromParams(params);
-      applyTheme(activeTheme, true);
+      await applyTheme(activeTheme, false);
     } else {
       activeTheme = (typeof THEMES !== 'undefined' && THEMES.find(t=>t.id===_themeId)) || (typeof THEMES !== 'undefined' ? THEMES[0] : null);
     }
+    // 单独图标改色(收款快捷键 + 功能菜单按展示顺序)在主题配色之后覆盖,再统一渲染
+    const iconOverridden = await applyIconColorOverrides(params);
+    if (iconOverridden || themeParam || hasColorParams) render();
 
     // 2) 页面跳转:page=amount/menu/order/success 映射到本文件的 home/menu/ledger/result 屏幕
     const PAGE_MAP = { amount:'home', home:'home', menu:'menu', ledger:'ledger', order:'ledger', result:'result', success:'result' };
@@ -6279,6 +6314,8 @@ render();
     // 7) 参数总览面板(颜色 / 尺寸与布局),始终展示当前生效值,方便核对
     renderPosPanels(activeTheme, { radius, font, labelSize, dialogW, active, size, page,
       shortcutSize, shortcutIcon, chassis,
+      scIconColors: parseColorList(params.get('scIconColors')),
+      menuIconColors: parseColorList(params.get('menuIconColors')),
       exitOn: params.get('exitBtn')==='true' || params.get('exitBtn')==='1',
       posCount: Object.keys(posOffsets).length,
       menuLayout: MENU_LAYOUT,
@@ -6325,6 +6362,8 @@ render();
       plain('快捷键图标', (sizeInfo.shortcutIcon || '28') + 'px'),
       plain('机身颜色', sizeInfo.chassis ? '#' + sizeInfo.chassis : '#2F2B4E(默认)'),
       plain('弹窗宽', (sizeInfo.dialogW || '240') + 'px'),
+      sizeInfo.scIconColors && sizeInfo.scIconColors.length ? plain('快捷键图标色', sizeInfo.scIconColors.map(c=>c.replace('#','')).join(',') + ' (scIconColors)') : '',
+      sizeInfo.menuIconColors && sizeInfo.menuIconColors.length ? plain('菜单图标色(展示序)', sizeInfo.menuIconColors.map(c=>c.replace('#','')).join(',') + ' (menuIconColors)') : '',
       plain('选中效果', sizeInfo.active || 'filled(默认)'),
       plain('整机缩放', sizeInfo.size || '100%'),
       plain('菜单页布局', sizeInfo.menuLayout === 'grid6' ? '经典六宫格' : '分栏(默认)'),
