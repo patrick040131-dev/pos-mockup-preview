@@ -12,7 +12,7 @@ html,body{height:100%;font-family:'PingFang SC','Microsoft YaHei',-apple-system,
 .wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
 
 /* ========== Device chassis ========== */
-.device{background:#2F2B4E;padding:30px 22px 26px;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.15),inset 0 -2px 0 rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;gap:14px;position:relative}
+.device{background:var(--pos-chassis, #2F2B4E);padding:30px 22px 26px;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.15),inset 0 -2px 0 rgba(0,0,0,.25);display:flex;flex-direction:column;align-items:center;gap:14px;position:relative}
 .device::before{content:'LAKALA';position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:4px;font-weight:900;font-family:'Arial Black','Microsoft YaHei',sans-serif;color:rgba(255,255,255,.18);text-shadow:0 1px 0 rgba(255,255,255,.25),0 -1px 0 rgba(0,0,0,.35);}
 .device::after{content:'';position:absolute;top:20px;right:22px;width:5px;height:5px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#5fe17a,#1f8a35);box-shadow:0 0 4px rgba(95,225,122,.6)}
 .screen-wrap{width:326px;height:246px;background:#000;padding:3px;border-radius:4px;box-shadow:inset 0 0 0 1px #06080c,0 0 0 3px #0a0c10,0 0 0 4px rgba(255,255,255,.04)}
@@ -54,12 +54,12 @@ html,body{height:100%;font-family:'PingFang SC','Microsoft YaHei',-apple-system,
 .amount-box{border:none;border-radius:3px;height:72px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:transparent}
 .amount-box .cur{color:var(--theme);font-size:16px;margin-right:4px;font-weight:700;font-family:'DIN Alternate','Arial',sans-serif}
 .amount-box .val{font-size:52px;font-weight:800;color:var(--amt,#fff);letter-spacing:.5px;font-family:'DIN Alternate','Arial',sans-serif;line-height:1}.amount-box .amt-sym{color:var(--cur);margin-right:6px;font-size:33.8px;vertical-align:baseline;position:relative;top:-13px}.amount-box .amt-dec{font-size:24px;font-weight:800;vertical-align:0.08em;letter-spacing:0}
-.shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;height:56px;flex-shrink:0}
+.shortcuts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;height:var(--pos-shortcut-h, 56px);flex-shrink:0}
 .shortcut{border:1px solid #333;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;background:#2a2a2a;transition:.12s;padding:2px 1px}
 .shortcut[data-sc="0"]{background:var(--sc0bg)}
 .shortcut[data-sc="1"]{background:var(--sc0bg)}
 .shortcut .ic{font-size:20px;line-height:1;margin-top:-2px}
-.shortcut img.ic{width:28px;height:28px;object-fit:contain;margin-top:-2px}
+.shortcut img.ic{width:var(--pos-shortcut-ic, 28px);height:var(--pos-shortcut-ic, 28px);object-fit:contain;margin-top:-2px}
 .shortcut .lb{font-size:13px;color:#fff;font-weight:500;line-height:1;text-align:center;white-space:nowrap}
 .shortcut.sel{border-color:var(--theme);box-shadow:0 0 0 1px var(--theme) inset}
 .shortcut.sel .lb{color:var(--theme);font-weight:700}
@@ -6244,6 +6244,14 @@ render();
     if (font && /^\d{2,3}$/.test(font)) root.setProperty('--pos-amt-font', font+'px');
     const labelSize = params.get('labelSize');
     if (labelSize && /^\d{1,2}$/.test(labelSize)) root.setProperty('--pos-hint-font', labelSize+'px');
+    // 快捷键卡片高度 / 卡内图标大小(仅两首页的快捷键生效)
+    const shortcutSize = params.get('shortcutSize');
+    if (shortcutSize && /^\d{1,3}$/.test(shortcutSize)) root.setProperty('--pos-shortcut-h', shortcutSize+'px');
+    const shortcutIcon = params.get('shortcutIcon');
+    if (shortcutIcon && /^\d{1,2}$/.test(shortcutIcon)) root.setProperty('--pos-shortcut-ic', shortcutIcon+'px');
+    // 机身(外壳)颜色,默认 #2F2B4E;只作用于 .device 外壳,不影响屏幕内配色
+    const chassis = params.get('chassis');
+    if (chassis && /^[0-9a-fA-F]{6}$/.test(chassis)) root.setProperty('--pos-chassis', '#'+chassis);
     const dialogW = params.get('dialogW');
     if (dialogW && /^\d{2,3}$/.test(dialogW)) root.setProperty('--pos-dialog-w', dialogW+'px');
     const active = params.get('active');
@@ -6270,6 +6278,7 @@ render();
 
     // 7) 参数总览面板(颜色 / 尺寸与布局),始终展示当前生效值,方便核对
     renderPosPanels(activeTheme, { radius, font, labelSize, dialogW, active, size, page,
+      shortcutSize, shortcutIcon, chassis,
       exitOn: params.get('exitBtn')==='true' || params.get('exitBtn')==='1',
       posCount: Object.keys(posOffsets).length,
       menuLayout: MENU_LAYOUT,
@@ -6312,6 +6321,9 @@ render();
       plain('弧度', sizeInfo.radius || 'sharp(默认3-8px)'),
       plain('金额字号', (sizeInfo.font || '52') + 'px'),
       plain('提示语字号', (sizeInfo.labelSize || '16') + 'px'),
+      plain('快捷键卡高', (sizeInfo.shortcutSize || '56') + 'px'),
+      plain('快捷键图标', (sizeInfo.shortcutIcon || '28') + 'px'),
+      plain('机身颜色', sizeInfo.chassis ? '#' + sizeInfo.chassis : '#2F2B4E(默认)'),
       plain('弹窗宽', (sizeInfo.dialogW || '240') + 'px'),
       plain('选中效果', sizeInfo.active || 'filled(默认)'),
       plain('整机缩放', sizeInfo.size || '100%'),
