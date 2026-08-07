@@ -6342,6 +6342,18 @@ render();
     const swatch = (hex, label, val) => `<span class="pos-token-chip has-swatch"><i style="background:${hex}"></i><b>${label}</b>${val||hex}</span>`;
     const plain = (label, val) => `<span class="pos-token-chip"><b>${label}</b>${val}</span>`;
 
+    const sc = sizeInfo.scIconColors || [];
+    const mc = sizeInfo.menuIconColors || [];
+    const iconList = [
+      { n:'收款', c: sc[0] || T.theme },
+      { n:'支付宝分期', c: sc[1] || T.acc },
+      { n:'预授权', c: mc[0] || T.theme },
+      { n:'担保交易', c: mc[1] || T.theme },
+      { n:'管理', c: mc[2] || T.theme },
+      { n:'更多', c: mc[3] || T.theme },
+      { n:'撤销/退货', c: mc[4] || T.acc },
+      { n:'账本', c: mc[5] || T.ledger },
+    ];
     const colorHtml = [
       swatch(T.theme, '主色'),
       swatch(T.sec, '辅色'),
@@ -6352,6 +6364,8 @@ render();
       swatch(T.ledger, '成功色(账本)'),
       swatch(T.sc0, '按键底色'),
       plain('当前主题', sizeInfo.themeName),
+      plain('可单独改色图标', 'scIconColors(收款/分期) + menuIconColors(菜单6个)'),
+      ...iconList.map(x=>swatch(x.c, x.n)),
     ].join('');
 
     const sizeHtml = [
